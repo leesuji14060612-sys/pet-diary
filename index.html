@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>우리 애 그림일기</title>
+<title>발도장 그림일기</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23fff' stroke='%23E0483E' stroke-width='5'/%3E%3Cellipse cx='32' cy='40' rx='11' ry='9' fill='%23E0483E'/%3E%3Cellipse cx='19' cy='28' rx='4.5' ry='6' fill='%23E0483E'/%3E%3Cellipse cx='27' cy='20' rx='4.5' ry='6' fill='%23E0483E'/%3E%3Cellipse cx='37' cy='20' rx='4.5' ry='6' fill='%23E0483E'/%3E%3Cellipse cx='45' cy='28' rx='4.5' ry='6' fill='%23E0483E'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
@@ -225,12 +226,15 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .shopdrop{min-height:100px;margin-top:14px;border-color:#9CCB9F;background:#F2FAF2;color:#2E7D46}
 .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .shopbtn{background:#2E7D46}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .brandmark{width:46px;height:46px;flex:none;transform:rotate(-10deg)}
+.brand small{font-size:.62em;color:#E0483E;margin-left:2px}
 </style>
 </head>
 <body>
 <main>
-  <h1>우리 애 그림일기</h1>
-  <p class="lede">사진 한 장으로 우리 애 그림일기, 생일 하나로 우리 애 사주까지.</p>
+  <h1 class="brand"><svg class="brandmark" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#fff" stroke="#E0483E" stroke-width="5"/><ellipse cx="32" cy="40" rx="11" ry="9" fill="#E0483E"/><ellipse cx="19" cy="28" rx="4.5" ry="6" fill="#E0483E"/><ellipse cx="27" cy="20" rx="4.5" ry="6" fill="#E0483E"/><ellipse cx="37" cy="20" rx="4.5" ry="6" fill="#E0483E"/><ellipse cx="45" cy="28" rx="4.5" ry="6" fill="#E0483E"/></svg><span>발도장 <small>그림일기</small></span></h1>
+  <p class="lede">우리 애의 하루에 쾅, 발도장. 사진 한 장으로 그림일기부터 사주·편지까지.</p>
   <div class="inapp" id="inapp" hidden>
     <p>카톡·인스타 안에서는 이미지 저장이 안 돼요.</p>
     <button id="openOut">크롬으로 열기</button>
@@ -712,7 +716,7 @@ async function drawDiaryCanvas(entry){
   // 서명
   g.globalAlpha = 1;
   g.fillStyle = "#6B7A99"; g.font = `400 36px ${HAND}`; g.textAlign = "left";
-  g.fillText(`${entry.name}의 그림일기`, PAD, y + 70);
+  g.fillText(`${entry.name}의 그림일기 · 발도장`, PAD, y + 70);
   return c;
 }
 
@@ -2226,7 +2230,7 @@ async function makeShorts(entry){
     }
     // 끝 서명
     const a3 = ease((t - T_STAMP - 0.6) / 0.6);
-    if (a3 > 0){ g.globalAlpha = a3; g.textAlign = "center"; g.fillStyle = INK; g.font = `700 46px ${HAND}`; g.fillText(`${entry.name}의 그림일기`, W/2, H - 70); g.globalAlpha = 1; }
+    if (a3 > 0){ g.globalAlpha = a3; g.textAlign = "center"; g.fillStyle = INK; g.font = `700 46px ${HAND}`; g.fillText(`${entry.name}의 그림일기`, W/2, H - 96); g.font = `400 34px ${HAND}`; g.fillStyle = "#E0483E"; g.fillText("발도장 그림일기", W/2, H - 46); g.globalAlpha = 1; }
   }
 
   // 녹화
