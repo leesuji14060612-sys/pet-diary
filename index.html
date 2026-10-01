@@ -197,7 +197,8 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .duo .who{text-align:center;font-family:"Gowun Batang",serif;font-size:.95rem;color:#C8321E;margin-top:6px}
 .duo .pillars{grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0}
 .duo .pillars b{font-size:1.15rem}
-.tabs{grid-template-columns:1fr 1fr 1.3fr 1.1fr}
+.tabs{grid-template-columns:repeat(5,1fr);gap:4px}
+.tabs button{font-size:.8rem !important;padding:10px 2px !important}
 .xmodes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
 .xmode{font:inherit;font-size:.9rem;padding:10px 4px;border-radius:6px;border:1.5px solid #8E7CC3;background:#fff;color:#5B4A99;cursor:pointer}
 .xmode.on{background:#8E7CC3;color:#fff}
@@ -233,6 +234,22 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .sty{font:inherit;font-size:.78rem;padding:9px 0;border-radius:6px;border:1.5px solid #C9B8EE;background:#fff;color:#5B4A99;cursor:pointer;white-space:nowrap}
 .sty.on{background:#8E7CC3;border-color:#8E7CC3;color:#fff}
 @media (max-width:380px){.styles{grid-template-columns:repeat(3,1fr)}}
+.pkgs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pkg{font:inherit;font-size:.85rem;font-weight:700;padding:10px 4px;border-radius:8px;border:1.5px solid #E0A35A;background:#fff;color:#9A5A1A;cursor:pointer;line-height:1.3}
+.pkg small{font-weight:400;font-size:.72rem}
+.pkg.on{background:#E0A35A;color:#fff}
+.ghost{margin-top:8px;width:100%;font:inherit;padding:10px;border-radius:6px;border:1.5px dashed #E0A35A;background:#FFF8EE;color:#9A5A1A;cursor:pointer}
+.ofields{margin-top:6px;padding:4px 12px 12px;border-radius:10px;background:#FFFBF4;border:1px solid #F1DFC4}
+.orderdrop{min-height:96px;margin-top:14px;border-color:#E0A35A;background:#FFF8EE;color:#9A5A1A}
+.orderdrop.small{min-height:80px}
+.orderbtn{background:#C9762A}
+.olist{list-style:none;padding:0;margin:16px 0 0}
+.olist li{display:flex;justify-content:space-between;padding:10px 12px;border-radius:8px;background:#fff;margin-bottom:6px;font-size:.92rem}
+.olist .ok{color:#2E7D46;font-weight:700}.olist .wait{color:#999}.olist .fail{color:#C9473A;font-weight:700}
+.ogrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.ogrid button{border:0;padding:0;background:#fff;border-radius:6px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:left;font:inherit}
+.ogrid img,.ogrid video{width:100%;display:block;max-height:340px;object-fit:contain;background:#f6f6f6}
+.ogrid small{display:block;padding:6px 8px;font-size:.78rem;color:#555}
 </style>
 </head>
 <body>
@@ -246,8 +263,9 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
   <nav class="tabs" role="tablist" aria-label="메뉴">
     <button role="tab" id="tabBtnDiary" aria-selected="true" aria-controls="tabDiary">📔 일기</button>
     <button role="tab" id="tabBtnSaju" aria-selected="false" aria-controls="tabSaju">🔮 사주</button>
-    <button role="tab" id="tabBtnExtra" aria-selected="false" aria-controls="tabExtra">💌 편지·달력</button>
+    <button role="tab" id="tabBtnExtra" aria-selected="false" aria-controls="tabExtra">💌 편지</button>
     <button role="tab" id="tabBtnShop" aria-selected="false" aria-controls="tabShop">🏫 알림장</button>
+    <button role="tab" id="tabBtnOrder" aria-selected="false" aria-controls="tabOrder">🧾 주문</button>
   </nav>
 <div id="tabDiary" role="tabpanel">
 
@@ -503,6 +521,63 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
     <p class="note" id="nNote" role="status"></p>
   </section>
   <section id="nResult" aria-live="polite"></section>
+</div>
+<div id="tabOrder" role="tabpanel" hidden>
+  <section class="sheet ordersheet" aria-label="크몽 주문 처리">
+    <p class="shopintro">크몽 주문을 <b>한 번에</b> 처리해요. 손님이 보낸 주문 양식을 붙여 넣고 사진만 올리면, 패키지에 맞는 결과물을 모두 만들어 ZIP으로 묶어 드려요.</p>
+    <label>패키지</label>
+    <div class="pkgs" role="radiogroup" aria-label="패키지">
+      <button type="button" class="pkg" data-p="STANDARD" role="radio" aria-checked="false">STANDARD<br><small>그림일기 1장</small></button>
+      <button type="button" class="pkg on" data-p="DELUXE" role="radio" aria-checked="true">DELUXE<br><small>일기 + 관상</small></button>
+      <button type="button" class="pkg" data-p="PREMIUM" role="radio" aria-checked="false">PREMIUM<br><small>일기 2장 + 관상·사주·궁합</small></button>
+    </div>
+    <label for="oText">주문 양식 붙여 넣기</label>
+    <textarea id="oText" rows="7" placeholder="손님이 보낸 주문 양식을 그대로 붙여 넣어 주세요.&#10;1. 아이 이름: 매실이&#10;2. 종류: 고양이&#10;3. 성격 한 줄: ...&#10;4. 최근 있었던 일: ...&#10;5. 생일 또는 집에 온 날: 2021.03.01&#10;6. 집사 이름과 생일: 수지 1995.03.20&#10;7. 원하는 말투: 시크"></textarea>
+    <button type="button" class="ghost" id="oParse">양식 읽어 오기</button>
+
+    <div class="ofields">
+      <div class="row">
+        <div><label for="oName">아이 이름</label><input type="text" id="oName" maxlength="12"></div>
+        <div><label for="oKind">종류</label><select id="oKind"><option>고양이</option><option>강아지</option><option>토끼</option><option>햄스터</option><option>새</option><option>기타</option></select></div>
+      </div>
+      <label for="oPersona">성격 한 줄</label><input type="text" id="oPersona" maxlength="60">
+      <label for="oToday">최근 있었던 일</label><textarea id="oToday" maxlength="200"></textarea>
+      <div class="row">
+        <div><label for="oDate">생일 또는 집에 온 날</label><input type="date" id="oDate"></div>
+        <div><label for="oBasis">기준</label><select id="oBasis"><option>생일</option><option>집에 온 날</option></select></div>
+      </div>
+      <div class="row">
+        <div><label for="oOwner">집사 이름</label><input type="text" id="oOwner" maxlength="12"></div>
+        <div><label for="oOwnerDate">집사 생일</label><input type="date" id="oOwnerDate"></div>
+      </div>
+      <div class="row">
+        <div><label for="oTone">말투</label><select id="oTone"><option>기본</option><option>시크</option><option>애교</option><option>허세</option></select></div>
+        <div><label for="oFur">털 색 (부적용)</label><select id="oFur"><option>치즈</option><option>고등어</option><option>삼색</option><option>턱시도</option><option>검정</option><option>흰색</option><option>회색</option><option>갈색</option><option>크림</option></select></div>
+      </div>
+    </div>
+
+    <input type="file" id="oPhoto" accept="image/*" class="sr">
+    <label for="oPhoto" class="drop orderdrop" id="oDrop"><span class="hint" id="oHint">손님이 보낸 사진 고르기 (필수)</span></label>
+    <input type="file" id="oArt" accept="image/*" multiple class="sr">
+    <label for="oArt" class="drop orderdrop small" id="oArtDrop"><span class="hint" id="oArtHint">이미 만든 그림이 있으면 올리기 (선택, 최대 2장)<br><small>제미나이에서 만든 그림을 쓰려면 여기에 올려 주세요</small></span></label>
+
+    <label class="check"><input type="checkbox" id="oAI" checked> 그림이 없으면 그림 AI로 그리기 (구글 결제 필요)</label>
+    <label>그림체</label>
+    <div class="styles" id="oStyle" role="radiogroup" aria-label="그림체">
+      <button type="button" class="sty on" data-s="크레파스" role="radio" aria-checked="true">🖍️ 크레파스</button>
+      <button type="button" class="sty" data-s="색연필" role="radio" aria-checked="false">✏️ 색연필</button>
+      <button type="button" class="sty" data-s="수채화" role="radio" aria-checked="false">🎨 수채화</button>
+      <button type="button" class="sty" data-s="동화책" role="radio" aria-checked="false">📖 동화책</button>
+      <button type="button" class="sty" data-s="스티커" role="radio" aria-checked="false">🏷️ 스티커</button>
+    </div>
+    <label>추가 옵션</label>
+    <label class="check"><input type="checkbox" id="oCharm"> 행운 부적 추가</label>
+    <label class="check"><input type="checkbox" id="oShorts"> 쇼츠 영상 추가 (오르골 배경음)</label>
+
+    <button class="primary orderbtn" id="oGo">주문 결과물 한 번에 만들기</button>
+    <p class="note" id="oNote" role="status"></p>
+  </section>
+  <section id="oResult" aria-live="polite"></section>
 </div>
 </main>
 
@@ -1256,7 +1331,7 @@ document.querySelectorAll(".tone").forEach(b => b.onclick = () => {
 
 // ===== 탭 =====
 function showTab(which){
-  [["diary","#tabDiary","#tabBtnDiary"],["saju","#tabSaju","#tabBtnSaju"],["extra","#tabExtra","#tabBtnExtra"],["shop","#tabShop","#tabBtnShop"]].forEach(([k, p, b]) => {
+  [["diary","#tabDiary","#tabBtnDiary"],["saju","#tabSaju","#tabBtnSaju"],["extra","#tabExtra","#tabBtnExtra"],["shop","#tabShop","#tabBtnShop"],["order","#tabOrder","#tabBtnOrder"]].forEach(([k, p, b]) => {
     $(p).hidden = k !== which; $(b).setAttribute("aria-selected", k === which);
   });
 }
@@ -1264,6 +1339,7 @@ $("#tabBtnDiary").onclick = () => showTab("diary");
 $("#tabBtnSaju").onclick = () => showTab("saju");
 $("#tabBtnExtra").onclick = () => showTab("extra");
 $("#tabBtnShop").onclick = () => showTab("shop");
+$("#tabBtnOrder").onclick = () => showTab("order");
 
 // ===== 사주 화면 =====
 let sMode = "pet";
@@ -2291,11 +2367,7 @@ async function recordRealtime(cv, frame, DURATION, FPS, withMusic, onProgress){
   return { blob: new Blob(chunks, { type: mime }), mime };
 }
 
-async function makeShorts(entry){
-  const out = $("#vidOut"), btn = $("#vid");
-  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ out.innerHTML = `<p class="note">이 브라우저는 영상 만들기를 지원하지 않아요. 크롬에서 열어 주세요.</p>`; return; }
-  if (entry.pending){ out.innerHTML = `<p class="note">그림이 다 그려지면 영상을 만들 수 있어요.</p>`; return; }
-  btn.disabled = true; btn.textContent = "영상 준비 중…";
+async function prepareShorts(entry){
   await ensureFonts();
   const W = 1080, H = 1920, FPS = 30;
   const HAND = '"PD Gaegu", "Gaegu", sans-serif', SANS = '"PD Dodum", "Gowun Dodum", sans-serif';
@@ -2371,6 +2443,24 @@ async function makeShorts(entry){
     if (a3 > 0){ g.globalAlpha = a3; g.textAlign = "center"; g.fillStyle = INK; g.font = `700 46px ${HAND}`; g.fillText(`${entry.name}의 그림일기`, W/2, H - 96); g.font = `400 34px ${HAND}`; g.fillStyle = "#E0483E"; g.fillText("발도장 그림일기", W/2, H - 46); g.globalAlpha = 1; }
   }
 
+  return { cv, frame, DURATION, FPS };
+}
+
+async function shortsBlob(entry, withMusic, onProgress){
+  const { cv, frame, DURATION, FPS } = await prepareShorts(entry);
+  if (window.VideoEncoder && window.VideoFrame){
+    try { return { blob: await encodeMp4(cv, frame, DURATION, FPS, withMusic, onProgress || (() => {})), ext: "mp4" }; } catch (e) { console.warn(e); }
+  }
+  const r = await recordRealtime(cv, frame, DURATION, FPS, withMusic, onProgress || (() => {}));
+  return { blob: r.blob, ext: r.mime.includes("mp4") ? "mp4" : "webm" };
+}
+
+async function makeShorts(entry){
+  const out = $("#vidOut"), btn = $("#vid");
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ out.innerHTML = `<p class="note">이 브라우저는 영상 만들기를 지원하지 않아요. 크롬에서 열어 주세요.</p>`; return; }
+  if (entry.pending){ out.innerHTML = `<p class="note">그림이 다 그려지면 영상을 만들 수 있어요.</p>`; return; }
+  btn.disabled = true; btn.textContent = "영상 준비 중…";
+  const { cv, frame, DURATION, FPS } = await prepareShorts(entry);
   const withMusic = !!($("#vidMusic") && $("#vidMusic").checked);
   let blob = null, mime = "video/mp4";
   // 1순위: 한 장면씩 직접 인코딩해서 mp4 만들기 (길이가 정확하고 화질이 좋아요)
@@ -2398,6 +2488,194 @@ async function makeShorts(entry){
     catch (e) { if (!e || e.name !== "AbortError") $("#vidShare").textContent = "공유가 안 돼요. 저장해 주세요"; }
   };
   btn.disabled = false; btn.textContent = "🎬 쇼츠 영상 다시 만들기";
+}
+
+// ===== 크몽 주문 한 번에 처리 =====
+let oPkg = "DELUXE", oPhoto = null, oArts = [];
+document.querySelectorAll(".pkg").forEach(b => b.onclick = () => {
+  oPkg = b.dataset.p;
+  document.querySelectorAll(".pkg").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
+});
+$("#oPhoto").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const t = await makeThumb(f); if (!t || !t.blob){ $("#oNote").textContent = "이 사진은 읽을 수 없어요."; return; }
+  oPhoto = t; const d = $("#oDrop"); d.querySelector("img")?.remove(); $("#oHint").hidden = true;
+  const im = new Image(); im.src = t.url; im.alt = "손님 사진"; d.appendChild(im);
+});
+$("#oArt").addEventListener("change", async e => {
+  const files = Array.from(e.target.files || []).slice(0, 2); oArts = [];
+  for (const f of files){ const t = await makeThumb(f); if (t && t.url) oArts.push(t.url); }
+  $("#oArtHint").innerHTML = `그림 ${oArts.length}장 올렸어요 · 다시 누르면 바꿀 수 있어요`;
+});
+
+function parseDateKo(str){
+  if (!str) return "";
+  let m = String(str).match(/(\d{4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);
+  if (!m){ const m2 = String(str).match(/\b(\d{2})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,2})\b/); if (m2) m = [null, (+m2[1] > 40 ? "19" : "20") + m2[1], m2[2], m2[3]]; }
+  if (!m){ const m3 = String(str).match(/\b(\d{4})(\d{2})(\d{2})\b/); if (m3) m = m3; }
+  if (!m) return "";
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return "";
+  return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+}
+function parseOrder(text){
+  const lines = String(text).split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const val = l => l.replace(/^\s*[\d\-•*\[\]\(\)]+[.)\]]?\s*/, "").replace(/^[^:：]*[:：]\s*/, "").trim();
+  const find = re => { const l = lines.find(x => re.test(x.split(/[:：]/)[0])); return l ? val(l) : ""; };
+  const o = {};
+  o.name = find(/이름/) && !/집사/.test(lines.find(x => /이름/.test(x.split(/[:：]/)[0])) || "") ? find(/이름/) : (lines.find(x => /아이\s*이름|반려동물\s*이름/.test(x)) ? val(lines.find(x => /아이\s*이름|반려동물\s*이름/.test(x))) : "");
+  if (o.name){ o.name = o.name.replace(/\s+(고양이|강아지|토끼|햄스터|새|코숏|냥이|멍이).*$/, "").replace(/[,(].*$/, "").trim(); }
+  const kindRaw = find(/종류|품종/) || (lines.find(x => /이름/.test(x)) || "");
+  o.kind = ["고양이","강아지","토끼","햄스터","새"].find(k => kindRaw.includes(k)) || (/냥|묘/.test(kindRaw) ? "고양이" : /멍|견|개/.test(kindRaw) ? "강아지" : "");
+  o.persona = find(/성격/);
+  o.today = find(/있었던|최근|일기 내용|에피소드/);
+  const dl = lines.find(x => /생일|집에\s*온|입양/.test(x.split(/[:：]/)[0]) && !/집사/.test(x.split(/[:：]/)[0]));
+  if (dl){
+    const label = dl.split(/[:：]/)[0], v = val(dl);
+    o.date = parseDateKo(v);
+    o.basis = /집에\s*온|입양/.test(v) ? "집에 온 날" : (/생일/.test(v) ? "생일" : (/집에\s*온|입양/.test(label) && !/생일/.test(label) ? "집에 온 날" : "생일"));
+  }
+  const ol = lines.find(x => /집사/.test(x.split(/[:：]/)[0]));
+  if (ol){ const v = val(ol); o.ownerDate = parseDateKo(v); o.owner = v.replace(/\d[\d.\-\/년월일\s]*/g, " ").replace(/[,()]/g, " ").replace(/생일|이름|과|와/g, " ").trim().split(/\s+/)[0] || ""; }
+  const tl = find(/말투/); o.tone = ["시크","애교","허세","기본"].find(t => tl.includes(t)) || "";
+  return o;
+}
+$("#oParse").onclick = () => {
+  const o = parseOrder($("#oText").value);
+  if (o.name) $("#oName").value = o.name;
+  if (o.kind) $("#oKind").value = o.kind;
+  if (o.persona) $("#oPersona").value = o.persona;
+  if (o.today) $("#oToday").value = o.today;
+  if (o.date) $("#oDate").value = o.date;
+  if (o.basis) $("#oBasis").value = o.basis;
+  if (o.owner) $("#oOwner").value = o.owner;
+  if (o.ownerDate) $("#oOwnerDate").value = o.ownerDate;
+  if (o.tone) $("#oTone").value = o.tone;
+  $("#oNote").textContent = "양식을 읽어 왔어요. 칸이 맞게 들어갔는지 한 번 확인해 주세요.";
+};
+
+async function orderDiary(info, extraHint){
+  const body = { image: await blobToBase64(info.photo.blob), name: info.name, kind: info.kind, persona: info.persona,
+    today: [info.today, extraHint].filter(Boolean).join(" "), tone: info.tone };
+  const resp = await fetch("/api/diary", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
+  const r = await resp.json().catch(() => ({}));
+  if (!resp.ok || typeof r.diary !== "string") throw new Error(r.error || "일기 실패");
+  return r;
+}
+async function orderDrawing(info, r, artUrl){
+  if (artUrl) return artUrl;
+  if (!info.useAI) return info.photo.url;
+  try {
+    const resp = await fetch("/api/drawing", { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ image: String(info.photo.url).split(",")[1], name: info.name, kind: info.kind, title: r.title, diary: r.diary, scene: r.scene, style: info.style }) });
+    const d = await resp.json().catch(() => ({}));
+    if (!resp.ok || !d.image) throw new Error();
+    return await shrink(d.image, 1200);
+  } catch { info.drawFail = (info.drawFail || 0) + 1; return info.photo.url; }
+}
+async function orderSaju(mode, info, extra){
+  const pet = info.date ? sajuOf(info.date) : null;
+  const body = Object.assign({ mode, pet: pet ? { name: info.name, kind: info.kind, basis: info.basis, date: info.date, pillars: pet.text, dayMaster: pet.dayMaster, animal: pet.animal, elements: pet.elText } : { name: info.name, kind: info.kind } }, extra || {});
+  const resp = await fetch("/api/saju", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
+  const r = await resp.json().catch(() => ({}));
+  if (!resp.ok || r.error) throw new Error(r.error || "사주 실패");
+  return { r, pet };
+}
+
+$("#oGo").onclick = async () => {
+  const info = {
+    name: $("#oName").value.trim(), kind: $("#oKind").value, persona: $("#oPersona").value.trim(), today: $("#oToday").value.trim(),
+    date: $("#oDate").value, basis: $("#oBasis").value, owner: $("#oOwner").value.trim(), ownerDate: $("#oOwnerDate").value,
+    tone: $("#oTone").value, fur: $("#oFur").value, style: styleOf("oStyle"), useAI: $("#oAI").checked, photo: oPhoto,
+  };
+  const pkg = oPkg;
+  if (!info.name){ $("#oNote").textContent = "아이 이름을 넣어 주세요."; return; }
+  if (!info.photo){ $("#oNote").textContent = "손님이 보낸 사진을 골라 주세요."; return; }
+  if (pkg === "PREMIUM" && !info.date){ $("#oNote").textContent = "프리미엄은 사주를 보니까 생일이나 집에 온 날이 필요해요."; return; }
+  if (pkg === "PREMIUM" && !info.ownerDate){ $("#oNote").textContent = "프리미엄은 집사 궁합이 있어서 집사 생일이 필요해요."; return; }
+  if ($("#oCharm").checked && !info.date){ $("#oNote").textContent = "부적은 생일이나 집에 온 날이 필요해요."; return; }
+  $("#oNote").textContent = "";
+
+  const tasks = [];
+  tasks.push({ key: "diary1", label: "그림일기 1" });
+  if (pkg === "PREMIUM") tasks.push({ key: "diary2", label: "그림일기 2" });
+  if (pkg !== "STANDARD") tasks.push({ key: "face", label: "관상 카드" });
+  if (pkg === "PREMIUM"){ tasks.push({ key: "saju", label: "사주 카드" }); tasks.push({ key: "match", label: "집사 궁합 카드" }); }
+  if ($("#oCharm").checked) tasks.push({ key: "charm", label: "행운 부적" });
+  if ($("#oShorts").checked) tasks.push({ key: "shorts", label: "쇼츠 영상" });
+  const st = {}; tasks.forEach(t => st[t.key] = "wait");
+  const files = [];
+  const show = () => { $("#oResult").innerHTML = `<ul class="olist">${tasks.map(t => `<li><span>${t.label}</span><span class="${st[t.key] === "done" ? "ok" : st[t.key] === "fail" ? "fail" : "wait"}">${st[t.key] === "done" ? "완료" : st[t.key] === "fail" ? "실패" : st[t.key] === "run" ? "만드는 중…" : "대기"}</span></li>`).join("")}</ul>`; };
+  const run = async (key, fn) => { if (!tasks.find(t => t.key === key)) return; st[key] = "run"; show(); try { await fn(); st[key] = "done"; } catch (e) { console.error(e); st[key] = "fail"; } show(); };
+  const addCanvas = async (name, cv) => files.push({ name, blob: await new Promise(r => cv.toBlob(r, "image/jpeg", 0.92)) });
+
+  $("#oGo").disabled = true; show();
+  let firstEntry = null;
+  const date = todayStr();
+  await run("diary1", async () => {
+    const r = await orderDiary(info, "");
+    const img = await orderDrawing(info, r, oArts[0]);
+    firstEntry = { name: info.name, kind: info.kind, date, weather: String(r.weather || "맑음"), title: String(r.title || `${info.name}의 하루`).slice(0, 20), diary: r.diary.slice(0, 280), img };
+    await addCanvas("01_그림일기.jpg", await drawDiaryCanvas(firstEntry));
+  });
+  await run("diary2", async () => {
+    const r = await orderDiary(info, firstEntry ? `(앞의 일기 "${firstEntry.title}"와는 다른 순간을 골라서 써 줘)` : "");
+    const img = await orderDrawing(info, r, oArts[1] || null);
+    const e2 = { name: info.name, kind: info.kind, date, weather: String(r.weather || "맑음"), title: String(r.title || `${info.name}의 하루`).slice(0, 20), diary: r.diary.slice(0, 280), img };
+    await addCanvas("02_그림일기.jpg", await drawDiaryCanvas(e2));
+  });
+  await run("face", async () => {
+    const extra = { image: await blobToBase64(info.photo.blob) };
+    const { r, pet } = await orderSaju("face", info, extra);
+    await addCanvas("03_관상카드.jpg", await drawSajuCanvas({ mode: "face", name: info.name, kind: info.kind, basis: info.basis, date: info.date, pet, photo: info.photo.url, r }));
+  });
+  await run("saju", async () => {
+    const { r, pet } = await orderSaju("pet", info);
+    await addCanvas("04_사주카드.jpg", await drawSajuCanvas({ mode: "pet", name: info.name, kind: info.kind, basis: info.basis, date: info.date, pet, r }));
+  });
+  await run("match", async () => {
+    const pet = sajuOf(info.date), own = sajuOf(info.ownerDate), ms = matchScore(pet, own, info.date + info.ownerDate);
+    const ownerName = info.owner || "집사";
+    const { r } = await orderSaju("match", info, { owner: { name: ownerName, pillars: own.text, dayMaster: own.dayMaster, animal: own.animal, elements: own.elText }, score: ms.score, notes: ms.notes });
+    await addCanvas("05_궁합카드.jpg", await drawSajuCanvas({ mode: "match", name: info.name, kind: info.kind, basis: info.basis, date: info.date, pet, own, ownerName, score: ms.score, r }));
+  });
+  await run("charm", async () => {
+    const pet = sajuOf(info.date), need = needElement(pet);
+    const { r } = await orderSaju("charm", info, { need: `${SJ.EL[need]}(${"木火土金水"[need]})`, fur: info.fur });
+    const fb = CHARM_EL[need], hz = String(r.hanja || "").replace(/[^\u4E00-\u9FFF]/g, "");
+    const c = { mode: "charm", need, fur: info.fur, name: info.name, kind: info.kind, basis: info.basis, date: info.date, pet, r,
+      hanja: hz.length === 4 ? hz : fb.hanja, reading: hz.length === 4 && r.reading ? r.reading : fb.reading, meaning: hz.length === 4 && r.meaning ? r.meaning : fb.meaning };
+    await addCanvas("06_행운부적.jpg", await drawCharmCanvas(c));
+  });
+  await run("shorts", async () => {
+    if (!firstEntry) throw new Error("일기 없음");
+    const v = await shortsBlob(firstEntry, true, p => { st.shorts = "run"; });
+    files.push({ name: `07_쇼츠영상.${v.ext}`, blob: v.blob });
+  });
+
+  const urls = files.map(f => URL.createObjectURL(f.blob));
+  const failed = tasks.filter(t => st[t.key] === "fail").map(t => t.label);
+  $("#oResult").innerHTML = `
+    <ul class="olist">${tasks.map(t => `<li><span>${t.label}</span><span class="${st[t.key] === "done" ? "ok" : "fail"}">${st[t.key] === "done" ? "완료" : "실패"}</span></li>`).join("")}</ul>
+    ${failed.length ? `<p class="note">${failed.join(", ")}이(가) 실패했어요. 해당 탭에서 따로 만들어 주세요.</p>` : ""}
+    ${info.drawFail ? `<p class="note">그림 AI가 응답하지 않아 ${info.drawFail}장은 손님 사진을 그대로 넣었어요. 제미나이에서 만든 그림을 "이미 만든 그림"에 올리고 다시 만들면 돼요.</p>` : ""}
+    <div class="actions"><button id="oZip" class="main">${escapeHtml(info.name)} · ${pkg} 결과물 ZIP 받기</button></div>
+    <div class="ogrid">${files.map((f, i) => f.name.endsWith(".jpg") ? `<button data-i="${i}"><img src="${urls[i]}" alt=""><small>${f.name}</small></button>` : `<button data-i="${i}"><video src="${urls[i]}" controls playsinline></video><small>${f.name}</small></button>`).join("")}</div>`;
+  document.querySelectorAll(".ogrid button").forEach(b => { const f = files[+b.dataset.i]; if (f.name.endsWith(".jpg")) b.onclick = () => showShot(f.blob, { name: info.name }); });
+  $("#oZip").onclick = () => downloadZipFiles(files, `${info.name}_${pkg}_${new Date().toISOString().slice(0,10)}`, $("#oZip"));
+  $("#oGo").disabled = false;
+  $("#oResult").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+async function downloadZipFiles(files, base, btn){
+  btn.disabled = true; const old = btn.textContent; btn.textContent = "묶는 중…";
+  try {
+    await loadJSZip(); const zip = new JSZip();
+    files.forEach(f => zip.file(f.name, f.blob));
+    const blob = await zip.generateAsync({ type: "blob" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${base}.zip`; document.body.appendChild(a); a.click(); a.remove();
+    btn.textContent = "받았어요";
+  } catch (e) { console.error(e); btn.textContent = "ZIP이 안 돼요. 한 장씩 저장해 주세요"; }
+  finally { btn.disabled = false; setTimeout(() => { btn.textContent = old; }, 3000); }
 }
 </script>
 </body>
