@@ -437,6 +437,13 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 </main>
 
 <script>
+// 캔버스에 그리기 전에, 실제로 쓸 글자가 들어 있는 폰트 조각을 모두 불러와요 (한글 깨짐 방지)
+const SCRIPT_HANGUL = (() => { try { return [...new Set((document.currentScript.textContent.match(/[\uAC00-\uD7A3]/g) || []))].join(""); } catch { return ""; } })();
+async function ensureFonts(data){
+  const text = SCRIPT_HANGUL + (typeof data === "string" ? data : JSON.stringify(data || ""));
+  const faces = ["400 40px Gaegu", "700 40px Gaegu", '400 40px "Gowun Dodum"', '400 40px "Gowun Batang"', '700 40px "Gowun Batang"'];
+  try { await Promise.all(faces.map(f => document.fonts.load(f, text))); } catch {}
+}
 const $ = s => document.querySelector(s);
 const KEY = "petdiary:v1";
 const WEATHER = {"맑음":"☀️ 맑음","흐림":"☁️ 흐림","비":"🌧️ 비","눈":"❄️ 눈","바람":"🍃 바람"};
@@ -577,7 +584,7 @@ async function drawDiaryCanvas(entry){
   const W = 1080, PAD = 60, IW = W - PAD*2, COLS = 10, CELL = IW / COLS;
   const INK = "#23407F", GRID = "#9DB3D9", RED = "#E0483E", TEXT = "#2A2A2A";
   const HAND = '"Gaegu", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
-  try { await Promise.all([document.fonts.load(`700 40px Gaegu`), document.fonts.load(`400 40px Gaegu`)]); } catch {}
+  await ensureFonts(entry);
   const img = await loadImg(entry.img);
   const cells = cellsOf(entry.diary, COLS);
   const rows = cells.length / COLS;
@@ -1083,7 +1090,7 @@ function drawPet(g, kind, fur, cx, cy, S, item){
 async function drawCharmCanvas(c){
   const W = 1080, H = 1680, RED = "#C8321E";
   const SERIF = '"Gowun Batang", "Noto Serif KR", "Noto Serif CJK KR", "Nanum Myeongjo", serif', SANS = '"Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"Gaegu", sans-serif';
-  try { await Promise.all([document.fonts.load(`700 40px "Gowun Batang"`), document.fonts.load(`40px "Gowun Dodum"`), document.fonts.load(`700 40px Gaegu`)]); } catch {}
+  await ensureFonts(c);
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d");
   // 부적 종이 (노란 한지 느낌)
@@ -1340,7 +1347,7 @@ async function drawSajuCanvas(c){
   const W = 1080, PAD = 70, IW = W - PAD*2;
   const RED = "#C8321E", INK = "#3A2A1A", BROWN = "#8A5A3A";
   const SERIF = '"Gowun Batang", "Nanum Myeongjo", serif', HAND = '"Gaegu", sans-serif', SANS = '"Gowun Dodum", "Malgun Gothic", sans-serif';
-  try { await Promise.all([document.fonts.load(`700 40px "Gowun Batang"`), document.fonts.load(`40px "Gowun Dodum"`), document.fonts.load(`700 40px Gaegu`)]); } catch {}
+  await ensureFonts(c);
   const h = sajuHead(c), secs = sajuSections(c).filter(x => x[1]);
 
   // 높이 계산용 임시 캔버스
@@ -1468,7 +1475,8 @@ async function postExtra(body){
 let tFile = null, tThumb = null;
 photoPicker("#tPhoto", "#tDrop", "#tHint", t => { tFile = t.blob; tThumb = t.url; });
 $("#tGo").onclick = async () => {
-  const name = $("#xName").value.trim() || "우리 애";
+  const name = $("#xName").value.trim();
+  if (!name){ $("#xNote").textContent = "편지에 들어갈 이름을 넣어 주세요."; $("#xName").focus(); return; }
   if (sajuUsed() >= SAJU_LIMIT){ $("#xNote").textContent = `오늘은 ${SAJU_LIMIT}번까지 만들 수 있어요.`; return; }
   const occasion = $("#tOcc").value;
   const body = { mode:"thanks", name, kind: $("#xKind").value, occasion, tone: $("#tTone").value,
@@ -1517,7 +1525,7 @@ $("#sbGo").onclick = async () => {
 
 async function drawChatCanvas(c){
   const W = 1080, PAD = 50, SANS = '"Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"Gaegu", sans-serif', SERIF = '"Gowun Batang", serif';
-  try { await Promise.all([document.fonts.load('40px "Gowun Dodum"'), document.fonts.load('700 40px Gaegu'), document.fonts.load('700 40px "Gowun Batang"')]); } catch {}
+  await ensureFonts(c);
   const img = await loadImg(c.photo);
   const m = document.createElement("canvas").getContext("2d");
   m.font = `38px ${SANS}`;
@@ -1589,7 +1597,8 @@ $("#lPhoto").addEventListener("change", async e => {
   const im = new Image(); im.src = lThumb; im.alt = "고른 사진"; d.appendChild(im);
 });
 $("#lGo").onclick = async () => {
-  const name = $("#xName").value.trim() || "우리 애";
+  const name = $("#xName").value.trim();
+  if (!name){ $("#xNote").textContent = "편지에 들어갈 이름을 넣어 주세요."; $("#xName").focus(); return; }
   if (sajuUsed() >= SAJU_LIMIT){ $("#xNote").textContent = `오늘은 ${SAJU_LIMIT}번까지 만들 수 있어요.`; return; }
   const body = { mode: "letter", name, kind: $("#xKind").value, call: $("#lCall").value.trim() || "집사",
     period: $("#lPeriod").value.trim(), likes: $("#lLikes").value.trim(), memories: $("#lMem").value.trim() };
@@ -1616,13 +1625,16 @@ $("#lGo").onclick = async () => {
 async function drawLetterCanvas(c){
   const W = 1080, PAD = 90, IW = W - PAD*2;
   const HAND = '"Gaegu", "Apple SD Gothic Neo", sans-serif', SERIF = '"Gowun Batang", "Noto Serif KR", serif', SANS = '"Gowun Dodum", sans-serif';
-  try { await Promise.all([document.fonts.load('700 40px Gaegu'), document.fonts.load('400 40px Gaegu'), document.fonts.load('700 40px "Gowun Batang"')]); } catch {}
+  await ensureFonts(c);
   const m = document.createElement("canvas").getContext("2d");
   m.font = `400 46px ${HAND}`;
   const paras = String(c.r.letter).split(/\n+/).map(p => p.trim()).filter(Boolean);
   const lines = []; paras.forEach((p, i) => { wrapLines(m, p, IW - 80).forEach(l => lines.push(l)); if (i < paras.length - 1) lines.push(""); });
   const LH = 74, photoY = 330, paperTop = 650;
-  const H = paperTop + 60 + lines.length * LH + 220;
+  m.font = `400 36px ${HAND}`;
+  const psLines = c.r.ps ? wrapLines(m, "추신. " + c.r.ps, IW - 80).slice(0, 3) : [];
+  const footH = 50 + (c.theme === "party" && c.occasion ? 58 : 0) + 20 + psLines.length * 50 + 40;
+  const H = paperTop + 60 + lines.length * LH + footH + 70;
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d");
   const party = c.theme === "party";
@@ -1640,7 +1652,7 @@ async function drawLetterCanvas(c){
     }
     // 색종이
     let sd = 3; const rr = () => (sd = (sd*16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 70; i++){ g.save(); g.translate(rr()*W, 180 + rr()*420); g.rotate(rr()*Math.PI); g.fillStyle = flags[i % flags.length]; g.fillRect(-8, -4, 16, 8); g.restore(); }
+    for (let i = 0; i < 70; i++){ g.save(); g.translate(rr()*W, 150 + rr()*290); g.rotate(rr()*Math.PI); g.fillStyle = flags[i % flags.length]; g.fillRect(-8, -4, 16, 8); g.restore(); }
   } else {
     // 무지개
     ["#F6B3B3","#F8CF9F","#F6E7A1","#BFE3B4","#AED3F2","#C9B8EE"].forEach((col, i) => {
@@ -1672,18 +1684,19 @@ async function drawLetterCanvas(c){
   g.fillStyle = T.accent; g.font = `700 54px ${SERIF}`;
   g.fillText(c.r.title || `${c.name}가 보내는 편지`, W/2, 560);
   // 편지지
-  const ph = 60 + lines.length * LH + 150;
+  const ph = 60 + lines.length * LH + footH;
   g.fillStyle = "rgba(255,253,247,.96)";
   g.beginPath(); g.roundRect(PAD-10, paperTop, IW+20, ph, 28); g.fill();
   g.strokeStyle = T.line; g.lineWidth = 2;
   for (let i = 0; i <= lines.length; i++){ const ly = paperTop + 50 + (i+1)*LH - 14; g.beginPath(); g.moveTo(PAD+30, ly); g.lineTo(PAD+IW-30, ly); g.stroke(); }
   g.textAlign = "left"; g.fillStyle = T.text; g.font = `400 46px ${HAND}`;
   lines.forEach((l, i) => g.fillText(l, PAD+40, paperTop + 50 + i*LH + LH/2));
-  let y = paperTop + 50 + lines.length*LH + 40;
+  let y = paperTop + 50 + lines.length*LH + 30;
+  if (party && c.occasion){ g.textAlign = "right"; g.font = `700 32px ${SANS}`; g.fillStyle = T.accent; g.fillText(`♥ ${c.occasion}에`, PAD+IW-30, y); y += 58; }
   g.textAlign = "right"; g.font = `700 44px ${HAND}`; g.fillStyle = T.accent;
   g.fillText(c.r.closing || (party ? `${c.name}가` : `무지개다리 너머에서, ${c.name}`), PAD+IW-30, y);
-  if (party && c.occasion){ g.textAlign = "left"; g.font = `700 34px ${SANS}`; g.fillStyle = T.accent; g.fillText(`♥ ${c.occasion}`, PAD+40, y); }
-  if (c.r.ps){ y += 62; g.textAlign = "left"; g.font = `400 36px ${HAND}`; g.fillStyle = T.sub; wrapLines(g, "추신. " + c.r.ps, IW - 80).slice(0,2).forEach(l => { g.fillText(l, PAD+40, y); y += 48; }); }
+  y += 20;
+  if (psLines.length){ y += 50; g.textAlign = "left"; g.font = `400 36px ${HAND}`; g.fillStyle = T.sub; psLines.forEach(l => { g.fillText(l, PAD+40, y); y += 50; }); }
   return cv;
 }
 
@@ -1794,7 +1807,7 @@ function smallPaw(g, x, y, s, col){
 }
 async function drawCalCover(name, year, src){
   const HAND = '"Gaegu", sans-serif', SANS = '"Gowun Dodum", sans-serif';
-  try { await document.fonts.load('700 40px Gaegu'); } catch {}
+  await ensureFonts(name);
   const cv = document.createElement("canvas"); cv.width = CAL.W; cv.height = CAL.H; const g = cv.getContext("2d");
   calBase(g);
   const img = await loadImg(src);
@@ -1809,6 +1822,7 @@ async function drawCalCover(name, year, src){
   return cv;
 }
 async function drawCalMonth(name, year, mth, src, caption, special){
+  await ensureFonts([name, caption, Object.values(holidaysOf(year)).join(""), Object.values(special).join("")]);
   const HAND = '"Gaegu", sans-serif', SANS = '"Gowun Dodum", sans-serif';
   const cv = document.createElement("canvas"); cv.width = CAL.W; cv.height = CAL.H; const g = cv.getContext("2d");
   calBase(g);
