@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
   if (!image || image.length > 3_500_000) {
     return res.status(400).json({ error: "사진이 없거나 너무 커요. 다른 사진을 골라 주세요." });
   }
-  const name = clip(body.name, 12) || "우리 애";
+  const name = clip(body.name, 12) || "우리 아이";
   const kind = KINDS.includes(body.kind) ? body.kind : "기타";
   const persona = clip(body.persona, 60);
   const TONES = {
@@ -27,40 +27,49 @@ module.exports = async (req, res) => {
   const tone = Object.prototype.hasOwnProperty.call(TONES, body.tone) ? body.tone : "기본";
   const today = clip(body.today, 200);
 
-  const prompt = `너는 ${kind} "${name}"(이)야. 첨부한 사진은 오늘의 너야.
-사진 속 표정, 자세, 장소, 물건을 자세히 보고, ${name}의 시점에서 초등학생 그림일기처럼 오늘 일기를 써 줘.
-${persona ? `성격: ${persona}\n` : ""}${today ? `집사가 알려준 오늘 있었던 일: ${today}\n` : ""}
+  const hasB = (w) => { const c = String(w).slice(-1).charCodeAt(0); return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 !== 0; };
+  const nameIs = name + (hasB(name) ? "이야" : "야");
+
+  const prompt = `너는 ${kind}고, 이름은 ${name}. 첨부한 사진은 오늘의 너야. (${nameIs})
+오늘 하루를 초등학생 그림일기처럼 네가 직접 써.
+${persona ? `성격: ${persona}\n` : ""}${today ? `집사가 알려 준 오늘 있었던 일: ${today}\n` : ""}
+말투: ${tone} — ${TONES[tone]}
+
+쓰는 순서 (속으로만 하고, 결과에는 최종 일기만 써):
+1. 사진에서 실제로 보이는 것(표정, 자세, 장소, 물건)을 확인해.
+2. 오늘 있었던 일을 딱 하나만 정해. 집사가 알려 준 일이 있으면 그걸 중심으로 해.
+3. 그 일을 일어난 순서대로 써. "무슨 일이 있었다 → 그래서 나는 이렇게 했다/느꼈다 → 마지막 한마디" 흐름으로.
+4. 다 쓴 뒤 처음부터 소리 내어 읽듯이 점검해: 맞춤법, 띄어쓰기, 조사(은/는, 이/가, 을/를), 시제가 맞는지, 앞뒤 내용이 서로 모순되지 않는지, 누가 무엇을 했는지 헷갈리지 않는지. 어색한 문장은 더 쉬운 문장으로 고쳐.
+
 규칙:
-- 반말, 1인칭("나"), 집사는 "집사"라고 불러. (허세 말투면 "이 몸", "본 냥이/본 멍이"도 좋아)
-- 자연스러운 한국어로 써. 번역투나 어색한 표현 금지. 자기 이름을 3인칭으로 부르지 말고 "나"라고 해.
-- 말투: ${tone} — ${TONES[tone]} 처음부터 끝까지 이 말투를 확실하게 살려.
-- 사진에서 실제로 보이는 것을 꼭 한두 가지 넣어.
-- ${kind}다운 엉뚱한 생각이나 오해를 하나 넣어서 웃기게.
-- 4~6문장, 공백 포함 180자 이내. 이모지 쓰지 마.
-- "scene"에는 일기에서 가장 웃긴 한 순간을 그림으로 그릴 수 있게 영어 한두 문장으로 써. 일기 본문에 나온 것(동물, 사람, 물건, 장소)만 넣고, 일기에 없는 사람이나 물건은 절대 넣지 마. 글자가 적힌 물건(포장지, 간판 등)도 빼.
-- 사진에 동물이 없으면 사진 속 물건을 ${name}가 구경한 이야기로 써.
-다른 말 없이 JSON 하나로만 답해: {"weather":"맑음|흐림|비|눈|바람 중 하나","title":"15자 이내 제목","diary":"일기 본문","scene":"그림 장면(영어)"}`;
+- 반말, 1인칭 "나". 가족은 "집사"라고 불러. (허세 말투면 "이 몸"도 좋아) 자기 이름을 3인칭으로 부르지 마.
+- 실제 한국 초등학생이 쓴 것처럼 짧고 쉬운 문장. 한 문장에 한 가지 내용만. 번역투, 억지스러운 말장난, 뜻이 애매한 표현은 쓰지 마.
+- 사진에서 보이는 것을 한두 가지 자연스럽게 넣고, ${kind}다운 엉뚱한 생각을 하나 넣어서 웃기게.
+- 사진에 없고 집사가 알려 주지도 않은 사건이나 인물은 만들지 마.
+- '우리 애'라는 말은 쓰지 마. 이모지 쓰지 마.
+- 4~5문장, 공백 포함 200자 이내.
+- 사진에 동물이 없으면 사진 속 물건을 구경한 이야기로 써.
+
+"scene"에는 일기에서 가장 웃긴 한 순간을 그림으로 그릴 수 있게 영어 한두 문장으로 써. 일기에 나온 것만 넣고, 글자가 적힌 물건은 빼.
+다른 말 없이 JSON 하나로만 답해: {"weather":"맑음|흐림|비|눈|바람 중 하나","title":"12자 이내 제목","diary":"최종 일기 본문","scene":"그림 장면(영어)"}`;
 
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001",
-        max_tokens: 600,
-        messages: [{
-          role: "user",
-          content: [
+    const MODELS = [process.env.ANTHROPIC_MODEL, "claude-sonnet-5-5", "claude-haiku-4-5-20251001"].filter(Boolean);
+    let r;
+    for (const model of MODELS) {
+      r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model, max_tokens: 1200,
+          messages: [{ role: "user", content: [
             { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
             { type: "text", text: prompt },
-          ],
-        }],
-      }),
-    });
+          ] }],
+        }),
+      });
+      if (r.status !== 404) break; // 모델 이름이 없으면 다음 모델로
+    }
 
     const data = await r.json();
     if (!r.ok) {
@@ -77,7 +86,7 @@ ${persona ? `성격: ${persona}\n` : ""}${today ? `집사가 알려준 오늘 �
     return res.status(200).json({
       weather: clip(out.weather, 4) || "맑음",
       title: clip(out.title, 20),
-      diary: String(out.diary).trim().slice(0, 260),
+      diary: String(out.diary).trim().slice(0, 280),
       scene: clip(out.scene, 400),
     });
   } catch (e) {

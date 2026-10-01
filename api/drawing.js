@@ -2,6 +2,13 @@
 // 구글 키는 Vercel 환경변수 GEMINI_API_KEY 에만 넣으세요.
 
 const KINDS = ["고양이", "강아지", "토끼", "햄스터", "새", "기타"];
+const ART_STYLES = {
+  "크레파스": { lead: "a cute crayon drawing, like a picture a Korean elementary school kid draws in a picture diary", style: "wax crayon and colored pencil on white paper, simple slightly wobbly lines, soft pastel colors, plain white background" },
+  "색연필": { lead: "a gentle colored pencil drawing", style: "soft colored pencils on white drawing paper, delicate visible hatching strokes, light pastel colors, airy and calm, plain white background" },
+  "수채화": { lead: "a soft watercolor painting", style: "light watercolor washes on textured watercolor paper, gentle bleeding edges, pale pastel colors, lots of white space, plain white background" },
+  "동화책": { lead: "a warm children's picture book illustration", style: "gouache picture book style, soft rounded shapes, cozy warm light, gentle pastel palette, simple soft background" },
+  "스티커": { lead: "a cute kawaii sticker illustration", style: "flat pastel colors, simple clean shapes, thick white die-cut outline around the whole pet, soft light gray shadow, plain white background" },
+};
 const clip = (v, n) => String(v || "").replace(/[\r\n]+/g, " ").trim().slice(0, n);
 
 // 앞에서부터 시도하고, 모델 이름이 없어졌으면(404) 다음 것으로 넘어갑니다.
@@ -22,19 +29,20 @@ module.exports = async (req, res) => {
   if (!image || image.length > 3_500_000) {
     return res.status(400).json({ error: "사진이 없거나 너무 커요." });
   }
-  const name = clip(body.name, 12) || "우리 애";
+  const name = clip(body.name, 12) || "우리 아이";
   const kind = KINDS.includes(body.kind) ? body.kind : "반려동물";
   const title = clip(body.title, 30);
   const diary = clip(body.diary, 300);
 
   const scene = clip(body.scene, 400);
   const animal = { "고양이":"cat","강아지":"dog","토끼":"rabbit","햄스터":"hamster","새":"bird" }[kind] || "pet";
-  const prompt = `Redraw the ${animal} in the attached photo as a cute crayon drawing, like a picture a Korean elementary school kid draws in a picture diary.
+  const st = ART_STYLES[body.style] || ART_STYLES["크레파스"];
+  const prompt = `Redraw the ${animal} in the attached photo as ${st.lead}.
 Keep the ${animal} recognizable: same fur colors, markings and body shape as in the photo.
 Draw ONLY this scene, and nothing else: ${scene || `${title}. ${diary}`}
 Do not add any people, animals, objects or props that are not in that scene. Ignore the photo's background.
 No text, letters, numbers, labels or speech bubbles anywhere in the image.
-Style: wax crayon and colored pencil on white paper, simple slightly wobbly lines, soft pastel colors, plain white background. Square image.`;
+Style: ${st.style}. Square image.`;
 
   let lastErr = "";
   for (const model of MODELS) {

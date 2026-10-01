@@ -6,14 +6,14 @@ const KINDS = ["고양이", "강아지", "토끼", "햄스터", "새", "기타"]
 
 function petLine(p) {
   if (!p) return "";
-  return `이름 ${clip(p.name, 12) || "우리 애"} (${KINDS.includes(p.kind) ? p.kind : "반려동물"}), 기준 날짜: ${clip(p.basis, 10)} ${clip(p.date, 12)}
+  return `이름 ${clip(p.name, 12) || "우리 아이"} (${KINDS.includes(p.kind) ? p.kind : "반려동물"}), 기준 날짜: ${clip(p.basis, 10)} ${clip(p.date, 12)}
 사주(년·월·일): ${clip(p.pillars, 40)} / 일간(타고난 기운): ${clip(p.dayMaster, 20)} / 띠: ${clip(p.animal, 8)}
 오행 개수: ${clip(p.elements, 60)}`;
 }
 
 const COMMON = `너는 반려동물 사주를 봐 주는 유쾌한 '냥멍도사'야. 아래 계산 결과를 근거로 재미로 보는 풀이를 써.
 규칙:
-- 친근한 존댓말(~해요). 귀엽고 웃기게, 따뜻하게. 자연스러운 한국어로, 번역투나 어색한 표현은 쓰지 마.
+- 친근한 존댓말(~해요). 귀엽고 웃기게, 따뜻하게. 자연스러운 한국어로, 번역투나 어색한 표현은 쓰지 마. '우리 애'라는 말은 쓰지 말고, 필요하면 '우리 아이'라고 써. 다 쓴 뒤 맞춤법, 띄어쓰기, 조사, 앞뒤 맥락이 맞는지 속으로 점검하고, 어색한 문장은 쉬운 문장으로 고쳐서 최종본만 써.
 - 근거로 오행이나 일간을 한두 번 자연스럽게 언급해.
 - 겁주는 말, 질병·사고·죽음·이별 예언은 절대 금지. 건강 얘기는 "물 잘 마시게 챙겨 주기" 같은 가벼운 생활 조언만.
 - 사람 사주를 단정적으로 평가하지 마. 집사는 반려동물과의 관계 위주로만 이야기해.
@@ -75,7 +75,7 @@ JSON 형식:
 - 건강·질병 판단은 절대 하지 마. 성격과 복, 재미 위주로만.
 - 사진에 동물이 없으면 nickname을 "관상 불가"로 하고 summary에 다른 사진을 올려 달라고 써.
 
-[반려동물] 이름 ${clip(b.pet && b.pet.name, 12) || "우리 애"} (${KINDS.includes(b.pet && b.pet.kind) ? b.pet.kind : "반려동물"})
+[반려동물] 이름 ${clip(b.pet && b.pet.name, 12) || "우리 아이"} (${KINDS.includes(b.pet && b.pet.kind) ? b.pet.kind : "반려동물"})
 ${b.pet && b.pet.pillars ? `생일 사주도 있음 → combo에 관상과 사주를 엮은 종합 풀이를 써 줘.\n${petLine(b.pet)}` : "생일 정보 없음 → combo는 빈 문자열로."}
 
 JSON 형식:
@@ -103,15 +103,16 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001",
-        max_tokens: 900,
-        messages: [{ role: "user", content }],
-      }),
-    });
+    const MODELS = [process.env.ANTHROPIC_MODEL, "claude-sonnet-5-5", "claude-haiku-4-5-20251001"].filter(Boolean);
+    let r;
+    for (const model of MODELS) {
+      r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: content }] }),
+      });
+      if (r.status !== 404) break;
+    }
     const data = await r.json();
     if (!r.ok) {
       console.error("Anthropic error", r.status, JSON.stringify(data).slice(0, 500));

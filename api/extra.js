@@ -9,7 +9,7 @@ const TONES = {
 };
 
 function letterPrompt(b) {
-  const name = clip(b.name, 12) || "우리 애";
+  const name = clip(b.name, 12) || "우리 아이";
   const kind = KINDS.includes(b.kind) ? b.kind : "반려동물";
   return `너는 무지개다리를 건넌 ${kind} "${name}"(이)야. 남겨진 가족에게 보내는 편지를 써 줘.
 가족을 부르는 호칭: ${clip(b.call, 10) || "집사"}
@@ -20,7 +20,7 @@ ${b.image ? "첨부한 사진은 함께 지내던 때의 너야. 사진 속 모�
 
 반드시 지킬 것:
 - ${name}의 1인칭으로, 위의 호칭으로 가족을 불러. 반말, 따뜻하고 다정하게.
-- 자연스러운 한국어로 써. 번역투나 어색한 표현 금지. 자기 이름을 3인칭으로 부르지 말고 "나"라고 해 (첫 인사에서 "나 ○○야" 한 번은 괜찮아).
+- 자연스러운 한국어로 써. 번역투나 어색한 표현 금지. '우리 애'라는 말은 쓰지 말고, 필요하면 '우리 아이'라고 써. 다 쓴 뒤 맞춤법, 띄어쓰기, 조사, 앞뒤 맥락이 맞는지 속으로 점검하고, 어색한 문장은 쉬운 문장으로 고쳐서 최종본만 써. 자기 이름을 3인칭으로 부르지 말고 "나"라고 해 (첫 인사에서 "나 ○○야" 한 번은 괜찮아).
 - 어미를 한 가지로 반복하지 마. 애교 말투라도 "~용"은 두세 번까지만.
 - 가족이 알려 준 내용만 구체적으로 써. 알려 주지 않은 사건이나 장소, 병명은 절대 지어내지 마.
 - 아프지 않다는 것, 무섭지 않다는 것, 가족 잘못이 아니라는 것, 함께해서 정말 행복했다는 것을 꼭 담아.
@@ -34,7 +34,7 @@ ${b.image ? "첨부한 사진은 함께 지내던 때의 너야. 사진 속 모�
 }
 
 function thanksPrompt(b) {
-  const name = clip(b.name, 12) || "우리 애";
+  const name = clip(b.name, 12) || "우리 아이";
   const kind = KINDS.includes(b.kind) ? b.kind : "반려동물";
   const tone = Object.prototype.hasOwnProperty.call(TONES, b.tone) ? b.tone : "기본";
   return `너는 ${kind} "${name}"(이)야. 오늘은 "${clip(b.occasion, 20) || "특별한 날"}"이라서 가족에게 편지를 써.
@@ -45,7 +45,7 @@ function thanksPrompt(b) {
 ${b.image ? "첨부한 사진은 지금의 너야. 사진 속 모습을 한 번 자연스럽게 언급해." : ""}
 규칙:
 - ${name}의 1인칭, 위의 호칭으로 가족을 불러. 말투를 처음부터 끝까지 살려.
-- 자연스러운 한국어로 써. 번역투나 어색한 표현 금지. 자기 이름을 3인칭으로 부르지 말고 "나"라고 해 (첫 인사에서 "나 ○○야" 한 번은 괜찮아).
+- 자연스러운 한국어로 써. 번역투나 어색한 표현 금지. '우리 애'라는 말은 쓰지 말고, 필요하면 '우리 아이'라고 써. 다 쓴 뒤 맞춤법, 띄어쓰기, 조사, 앞뒤 맥락이 맞는지 속으로 점검하고, 어색한 문장은 쉬운 문장으로 고쳐서 최종본만 써. 자기 이름을 3인칭으로 부르지 말고 "나"라고 해 (첫 인사에서 "나 ○○야" 한 번은 괜찮아).
 - 어미를 한 가지로 반복하지 마. 애교 말투라도 "~용"은 두세 번까지만.
 - "처음 데려온 날 기억나?"처럼 함께한 시간을 돌아보고, 고마움과 앞으로도 잘 부탁한다는 마음을 담아. 웃긴 부탁(간식 더 줘 등) 하나는 꼭 넣어.
 - 가족이 알려 준 내용만 구체적으로 쓰고, 없는 사건은 지어내지 마.
@@ -66,7 +66,7 @@ ${b.image ? "첨부한 사진에 두 아이가 있어. 사진 속 자리, 자세
 규칙:
 - 티격태격하지만 결국 서로 좋아하는 형제 케미. 반말, 짧고 웃기게. "또 내 자리 뺏었다" 같은 일상 다툼이 좋아.
 - 각자 성격이 말투에 드러나게. 알려 주지 않은 사건은 지어내지 마.
-- 자연스러운 한국어 구어체로. 번역투 금지. 자기 이름을 3인칭으로 부르지 마.
+- 자연스러운 한국어 구어체로. 번역투 금지. '우리 애'라는 말은 쓰지 말고, 필요하면 '우리 아이'라고 써. 다 쓴 뒤 맞춤법, 띄어쓰기, 조사, 앞뒤 맥락이 맞는지 속으로 점검하고, 어색한 문장은 쉬운 문장으로 고쳐서 최종본만 써. 자기 이름을 3인칭으로 부르지 마.
 - 대화 8~12줄, 한 줄 35자 이내. 이모지 쓰지 마.
 - 마지막엔 각자 상대에 대해 쓴 짧은 일기(2~3문장, 120자 이내). 겉으론 투덜대도 속마음이 살짝 드러나게.
 다른 말 없이 JSON 하나로만 답해:
@@ -90,12 +90,12 @@ ${b.image ? "첨부한 사진은 오늘 유치원에서 찍은 사진이야. 사
 규칙:
 - 기록과 메모에 있는 사실만 써. 없는 사건, 먹은 음식, 친구 이름을 지어내지 마.
 - 식사나 배변, 컨디션이 좋지 않다는 기록이 있으면 diary에서는 가볍게 넘기고, teacher에서 사실대로 차분하게 전달해. 진단이나 병명 추측은 절대 하지 마.
-- 자연스러운 한국어, 번역투 금지. 자기 이름을 3인칭으로 부르지 마. 이모지 쓰지 마.
+- 자연스러운 한국어, 번역투 금지. '우리 애'라는 말은 쓰지 말고, 필요하면 '우리 아이'라고 써. 다 쓴 뒤 맞춤법, 띄어쓰기, 조사, 앞뒤 맥락이 맞는지 속으로 점검하고, 어색한 문장은 쉬운 문장으로 고쳐서 최종본만 써. 자기 이름을 3인칭으로 부르지 마. 이모지 쓰지 마.
 다른 말 없이 JSON 하나로만 답해: {"title":"오늘의 제목 16자 이내","diary":"...","teacher":"..."}`;
 }
 
 function calendarPrompt(b) {
-  const name = clip(b.name, 12) || "우리 애";
+  const name = clip(b.name, 12) || "우리 아이";
   const kind = KINDS.includes(b.kind) ? b.kind : "반려동물";
   const tone = Object.prototype.hasOwnProperty.call(TONES, b.tone) ? b.tone : "기본";
   return `너는 ${kind} "${name}"(이)야. 집사 책상에 놓일 달력의 1월~12월 각 달에 들어갈 한 줄 문구를 ${name} 시점으로 써 줘.
@@ -126,11 +126,16 @@ module.exports = async (req, res) => {
     content = [{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b.image } }, { type: "text", text: prompt }];
   }
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001", max_tokens: 2500, messages: [{ role: "user", content }] }),
-    });
+    const MODELS = [process.env.ANTHROPIC_MODEL, "claude-sonnet-5-5", "claude-haiku-4-5-20251001"].filter(Boolean);
+    let r;
+    for (const model of MODELS) {
+      r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model, max_tokens: 2500, messages: [{ role: "user", content: content }] }),
+      });
+      if (r.status !== 404) break;
+    }
     const data = await r.json();
     if (!r.ok) {
       console.error("Anthropic error", r.status, JSON.stringify(data).slice(0, 500));
