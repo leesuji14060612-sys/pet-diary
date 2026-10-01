@@ -428,6 +428,7 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
       <input type="file" id="cPhotos" accept="image/*" multiple class="sr">
       <label for="cPhotos" class="drop caldrop" id="cDrop"><span class="hint" id="cHint">그림일기 그림이나 사진 고르기 (최대 13장)<br><small>첫 장은 표지, 그다음부터 1월~12월이에요. 모자라면 반복해서 써요.</small></span></label>
       <div class="calthumbs" id="cThumbs"></div>
+      <label class="check"><input type="checkbox" id="cDraw" checked> 사진을 그림일기 그림체로 바꿔서 넣기 (그림 AI 사용)</label>
       <button class="primary" id="cGo">달력 만들기</button>
     </div>
     <p class="note" id="xNote" role="status"></p>
@@ -439,6 +440,9 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 <script>
 // 캔버스에 그리기 전에, 실제로 쓸 글자가 들어 있는 폰트 조각을 모두 불러와요 (한글 깨짐 방지)
 const SCRIPT_HANGUL = (() => { try { return [...new Set((document.currentScript.textContent.match(/[\uAC00-\uD7A3]/g) || []))].join(""); } catch { return ""; } })();
+// 이름 뒤에 자연스러운 조사 붙이기: 매실이 → 매실이가, 콩 → 콩이가
+function hasBatchim(word){ const ch = String(word).trim().slice(-1).charCodeAt(0); return ch >= 0xAC00 && ch <= 0xD7A3 && (ch - 0xAC00) % 28 !== 0; }
+function ga(name){ return name + (hasBatchim(name) ? "이가" : "가"); }
 async function ensureFonts(data){
   const text = SCRIPT_HANGUL + (typeof data === "string" ? data : JSON.stringify(data || ""));
   const faces = ["400 40px Gaegu", "700 40px Gaegu", '400 40px "Gowun Dodum"', '400 40px "Gowun Batang"', '700 40px "Gowun Batang"'];
@@ -751,7 +755,8 @@ const ERR = {
 async function write(){
   if (!file){ $("#note").textContent = "먼저 사진을 골라 주세요."; return; }
   if (usedToday() >= DAILY_LIMIT){ $("#note").textContent = `오늘은 ${DAILY_LIMIT}번까지 쓸 수 있어요. 내일 또 만나요!`; return; }
-  const name = $("#name").value.trim() || "우리 애";
+  const name = $("#name").value.trim();
+  if (!name){ $("#note").textContent = "아이 이름을 넣어 주세요. 일기에 이름이 들어가요."; $("#name").focus(); return; }
   const kind = $("#kind").value;
   const persona = $("#persona").value.trim();
   const today = $("#today").value.trim();
@@ -759,7 +764,7 @@ async function write(){
   $("#go").disabled = true;
   const el = $("#diary");
   el.classList.add("show");
-  el.innerHTML = `<p class="thinking">${escapeHtml(name)}(이)가 연필 깎는 중…</p>`;
+  el.innerHTML = `<p class="thinking">${escapeHtml(ga(name))} 연필 깎는 중…</p>`;
   try {
     const image = await blobToBase64(file);
     const resp = await fetch("/api/diary", {
@@ -1483,7 +1488,7 @@ $("#tGo").onclick = async () => {
     call: $("#tCall").value.trim() || "집사", period: $("#tPeriod").value.trim(), memories: $("#tMem").value.trim() };
   if (tFile) body.image = await blobToBase64(tFile);
   $("#tGo").disabled = true; $("#xNote").textContent = "";
-  $("#xResult").innerHTML = `<p class="thinking" style="color:#C2466A">${escapeHtml(name)}(이)가 몰래 편지 쓰는 중…</p>`;
+  $("#xResult").innerHTML = `<p class="thinking" style="color:#C2466A">${escapeHtml(ga(name))} 몰래 편지 쓰는 중…</p>`;
   try {
     const r = await postExtra(body);
     if (!r.letter) throw new Error("다시 눌러 주세요.");
@@ -1604,7 +1609,7 @@ $("#lGo").onclick = async () => {
     period: $("#lPeriod").value.trim(), likes: $("#lLikes").value.trim(), memories: $("#lMem").value.trim() };
   if (lFile) body.image = await blobToBase64(lFile);
   $("#lGo").disabled = true; $("#xNote").textContent = "";
-  $("#xResult").innerHTML = `<p class="thinking" style="color:#6A5AA8">${escapeHtml(name)}(이)가 편지를 쓰고 있어요…</p>`;
+  $("#xResult").innerHTML = `<p class="thinking" style="color:#6A5AA8">${escapeHtml(ga(name))} 편지를 쓰고 있어요…</p>`;
   try {
     const resp = await fetch("/api/extra", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body) });
     const r = await resp.json().catch(() => ({}));
@@ -1730,13 +1735,14 @@ const HOLIDAYS = {
 function holidaysOf(year){ return HOLIDAYS[year] || FIXED_HOLI; }
 
 $("#cGo").onclick = async () => {
-  const name = $("#xName").value.trim() || "우리 애";
+  const name = $("#xName").value.trim();
+  if (!name){ $("#xNote").textContent = "달력에 들어갈 이름을 넣어 주세요."; $("#xName").focus(); return; }
   if (!calImgs.length){ $("#xNote").textContent = "그림이나 사진을 한 장 이상 골라 주세요."; return; }
   if (sajuUsed() >= SAJU_LIMIT){ $("#xNote").textContent = `오늘은 ${SAJU_LIMIT}번까지 만들 수 있어요.`; return; }
   const year = Number($("#cYear").value);
   $("#cGo").disabled = true; $("#xNote").textContent = "";
   const noTable = !HOLIDAYS[year];
-  $("#xResult").innerHTML = `<p class="thinking">${escapeHtml(name)}(이)가 달력에 낙서하는 중… (1분쯤 걸려요)</p>`;
+  $("#xResult").innerHTML = `<p class="thinking">${escapeHtml(ga(name))} 달력에 한마디씩 적는 중…</p>`;
   try {
     const resp = await fetch("/api/extra", { method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ mode:"calendar", name, kind: $("#xKind").value, tone: $("#cTone").value, persona: $("#cPersona").value.trim() }) });
@@ -1746,16 +1752,40 @@ $("#cGo").onclick = async () => {
     const special = {};
     const addDay = (v, label) => { if (!v) return; const [, mm, dd] = v.split("-").map(Number); special[`${mm}-${dd}`] = label; };
     addDay($("#cHome").value, "온 날"); addDay($("#cBday").value, "생일");
+    const pick = i => calImgs.length > 1 ? calImgs[i % calImgs.length] : calImgs[0];
+    // 0 = 표지, 1~12 = 각 달
+    const srcs = Array.from({ length: 13 }, (_, i) => pick(i));
+    let drawFail = 0;
+    if ($("#cDraw").checked){
+      const scenes = [r.coverScene, ...(r.scenes || [])];
+      const kind = $("#xKind").value;
+      let done = 0, ok = 0, stop = false;
+      const show = () => { $("#xResult").innerHTML = `<p class="thinking">${escapeHtml(ga(name))} 크레파스로 그리는 중… ${done}/13<br><small>한 장에 30초쯤 걸려서 몇 분 걸려요. 화면을 끄지 말아 주세요.</small></p>`; };
+      show();
+      const jobs = srcs.map((src, i) => async () => {
+        if (stop) { drawFail++; return; }
+        try {
+          const resp = await fetch("/api/drawing", { method:"POST", headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({ image: String(src).split(",")[1], name, kind, title: i === 0 ? `${name}의 달력 표지` : `${i}월`, diary: i === 0 ? "" : (r.months[i-1] || ""), scene: scenes[i] || "" }) });
+          const d = await resp.json().catch(() => ({}));
+          if (!resp.ok || !d.image) throw new Error(d.error || "fail");
+          srcs[i] = await shrink(d.image, 1200); ok++;
+        } catch { drawFail++; if (!ok && drawFail >= 2) stop = true; }
+        done++; show();
+      });
+      // 3장씩 동시에 그리기
+      let next = 0;
+      await Promise.all(Array.from({ length: 3 }, async () => { while (next < jobs.length){ const j = jobs[next++]; await j(); } }));
+    }
+    $("#xResult").innerHTML = `<p class="thinking">달력에 붙이는 중…</p>`;
     const pages = [];
-    const pick = i => calImgs[i % calImgs.length];
-    pages.push({ label: "표지", blob: await canvasBlob(await drawCalCover(name, year, calImgs[0])) });
+    pages.push({ label: "표지", blob: await canvasBlob(await drawCalCover(name, year, srcs[0])) });
     for (let mth = 1; mth <= 12; mth++){
-      const img = calImgs.length > 1 ? pick(mth) : calImgs[0];
-      pages.push({ label: `${mth}월`, blob: await canvasBlob(await drawCalMonth(name, year, mth, img, r.months[mth-1], special)) });
-      $("#xResult").innerHTML = `<p class="thinking">${mth}월까지 만들었어요…</p>`;
+      pages.push({ label: `${mth}월`, blob: await canvasBlob(await drawCalMonth(name, year, mth, srcs[mth], r.months[mth-1], special)) });
     }
     const urls = pages.map(p => URL.createObjectURL(p.blob));
     $("#xResult").innerHTML = `
+      ${drawFail ? `<p class="note">${drawFail === 13 ? "그림 AI가 응답하지 않아서 사진을 그대로 넣었어요. 구글 AI 결제 상태를 확인해 주세요." : `${drawFail}장은 그림으로 못 바꿔서 사진을 그대로 넣었어요.`}</p>` : ""}
       ${noTable ? `<p class="note">${year}년 공휴일 표가 아직 없어서 양력 공휴일만 표시했어요. 설날·추석 날짜가 발표되면 표를 추가해 주세요.</p>` : ""}
       <div class="actions"><button id="cZip" class="main">달력 13장 한 번에 받기 (ZIP)</button></div>
       <p class="disclaimer" style="color:var(--muted)">한 장씩 저장하려면 그림을 눌러 주세요</p>
@@ -1818,7 +1848,7 @@ async function drawCalCover(name, year, src){
   g.font = `700 92px ${HAND}`; g.fillText(`${name}의`, 110, 500); g.fillText("그림일기 달력", 110, 610);
   g.fillStyle = "#FFE45C"; g.fillRect(105, 650, 520, 22);
   smallPaw(g, 160, 820, 90, CAL.RED);
-  g.fillStyle = "#6B7A99"; g.font = `36px ${SANS}`; g.fillText("우리 애가 직접 쓴 열두 달", 110, 960);
+  g.fillStyle = "#6B7A99"; g.font = `36px ${SANS}`; g.fillText(`우리 ${ga(name)} 직접 쓴 열두 달`, 110, 960);
   return cv;
 }
 async function drawCalMonth(name, year, mth, src, caption, special){

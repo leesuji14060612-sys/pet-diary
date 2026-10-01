@@ -81,7 +81,9 @@ function calendarPrompt(b) {
 말투: ${tone} (${TONES[tone]})
 성격: ${clip(b.persona, 60) || "알려 주지 않음"}
 규칙: 각 달의 계절감(눈, 벚꽃, 장마, 더위, 단풍, 연말 등)을 살려서 귀엽고 웃기게. 각 25자 이내. 이모지 쓰지 마. 특정 연도 숫자는 쓰지 마.
-다른 말 없이 JSON 하나로만 답해: {"months":["1월 문구","2월 문구", ... 12개]}`;
+그리고 각 달 그림에 쓸 장면도 영어 한 문장으로 써 줘(scenes, 12개). ${kind} 한 마리만 등장하고, 그 달의 계절과 문구 내용이 보이는 귀여운 장면. 사람, 글자, 숫자는 넣지 마.
+표지 장면(coverScene)도 영어 한 문장으로: ${kind}가 정면을 보며 웃고 있는 사랑스러운 초상 장면.
+다른 말 없이 JSON 하나로만 답해: {"months":["1월 문구", ... 12개],"scenes":["January scene", ... 12개],"coverScene":"..."}`;
 }
 
 module.exports = async (req, res) => {
@@ -105,7 +107,7 @@ module.exports = async (req, res) => {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001", max_tokens: 1200, messages: [{ role: "user", content }] }),
+      body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001", max_tokens: 2500, messages: [{ role: "user", content }] }),
     });
     const data = await r.json();
     if (!r.ok) {
@@ -119,7 +121,9 @@ module.exports = async (req, res) => {
     if (b.mode === "calendar") {
       const months = Array.isArray(out.months) ? out.months.slice(0, 12).map(x => clip(x, 40)) : [];
       while (months.length < 12) months.push("");
-      return res.status(200).json({ months });
+      const scenes = Array.isArray(out.scenes) ? out.scenes.slice(0, 12).map(x => clip(x, 300)) : [];
+      while (scenes.length < 12) scenes.push("");
+      return res.status(200).json({ months, scenes, coverScene: clip(out.coverScene, 300) });
     }
     if (b.mode === "siblings") {
       const chat = (Array.isArray(out.chat) ? out.chat : []).slice(0, 14)
