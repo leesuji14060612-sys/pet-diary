@@ -294,11 +294,11 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 <div id="tabSaju" role="tabpanel" hidden>
   <section class="sheet sajusheet" aria-label="사주 보기">
     <div class="modes" role="radiogroup" aria-label="무엇을 볼까요">
-      <button class="mode on" data-mode="pet" role="radio" aria-checked="true">우리 애 사주</button>
+      <button class="mode on" data-mode="pet" role="radio" aria-checked="true">우리 아이 사주</button>
       <button class="mode" data-mode="match" role="radio" aria-checked="false">집사와 궁합</button>
       <button class="mode" data-mode="year" role="radio" aria-checked="false">올해 운세</button>
       <button class="mode" data-mode="face" role="radio" aria-checked="false">📸 관상 보기</button>
-      <button class="mode" data-mode="charm" role="radio" aria-checked="false" style="grid-column:1/-1">🧧 우리 애 행운 부적</button>
+      <button class="mode" data-mode="charm" role="radio" aria-checked="false" style="grid-column:1/-1">🧧 우리 아이 행운 부적</button>
     </div>
 
     <div class="row">
@@ -370,10 +370,10 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 
     <div id="thanksBox">
       <input type="file" id="tPhoto" accept="image/*" class="sr">
-      <label for="tPhoto" class="drop letterdrop thanksdrop" id="tDrop"><span class="hint" id="tHint">지금 우리 애 사진 고르기 (선택)</span></label>
+      <label for="tPhoto" class="drop letterdrop thanksdrop" id="tDrop"><span class="hint" id="tHint">지금 우리 아이 사진 고르기 (선택)</span></label>
       <div class="row">
         <div><label for="tOcc">어떤 날이에요?</label>
-          <select id="tOcc"><option>집사 생일</option><option>입양 기념일</option><option>우리 애 생일</option><option>새해</option><option>그냥 고마운 날</option></select>
+          <select id="tOcc"><option>집사 생일</option><option>입양 기념일</option><option>우리 아이 생일</option><option>새해</option><option>그냥 고마운 날</option></select>
         </div>
         <div><label for="tTone">말투</label>
           <select id="tTone"><option>기본</option><option>시크</option><option>애교</option><option>허세</option></select>
@@ -1274,7 +1274,7 @@ function elBar(sj){
 }
 
 async function askDosa(){
-  const name = $("#sName").value.trim() || "우리 애";
+  const name = $("#sName").value.trim() || "우리 아이";
   const kind = $("#sKind").value;
   const date = $("#sDate").value;
   const basis = $("#sNoBday").checked ? "집에 온 날" : "생일";
