@@ -312,14 +312,100 @@ function render(entry, animate){
   el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
 }
 
-function loadH2C(){
-  if (window.html2canvas) return Promise.resolve();
-  return new Promise((res, rej) => {
-    const sc = document.createElement("script");
-    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-    sc.onload = res; sc.onerror = rej;
-    document.head.appendChild(sc);
+function cellsOf(text, cols){
+  const cells = [];
+  String(text).trim().split(/\n+/).forEach(p => {
+    Array.from(" " + p.trim()).forEach(ch => cells.push(ch));
+    while (cells.length % cols) cells.push("");
   });
+  while (cells.length < cols*6) cells.push("");
+  return cells;
+}
+function loadImg(src){
+  return new Promise(res => { if (!src) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+}
+
+// 일기장 한 장을 캔버스에 직접 그립니다 (외부 라이브러리 없이 가볍게)
+async function drawDiaryCanvas(entry){
+  const W = 1080, PAD = 60, IW = W - PAD*2, COLS = 10, CELL = IW / COLS;
+  const INK = "#23407F", GRID = "#9DB3D9", RED = "#E0483E", TEXT = "#2A2A2A";
+  const HAND = '"Gaegu", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+  try { await Promise.all([document.fonts.load(`700 40px Gaegu`), document.fonts.load(`400 40px Gaegu`)]); } catch {}
+  const img = await loadImg(entry.img);
+  const cells = cellsOf(entry.diary, COLS);
+  const rows = cells.length / COLS;
+
+  const META_H = 96, TITLE_H = 96;
+  let picH = 0, dw = 0, dh = 0;
+  if (img){
+    const k = Math.min((IW - 40) / img.width, 760 / img.height);
+    dw = img.width * k; dh = img.height * k; picH = dh + 40;
+  }
+  const gridH = rows * CELL;
+  const H = PAD + META_H + picH + TITLE_H + gridH + 110;
+
+  const c = document.createElement("canvas");
+  c.width = W; c.height = Math.round(H);
+  const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  g.textBaseline = "middle";
+  let y = PAD;
+
+  // 날짜 / 날씨
+  const WX = W - PAD - 320;
+  g.strokeStyle = INK; g.lineWidth = 4;
+  g.strokeRect(PAD, y, IW, META_H);
+  g.beginPath(); g.moveTo(WX, y); g.lineTo(WX, y + META_H); g.stroke();
+  g.fillStyle = INK; g.font = `400 44px ${HAND}`; g.textAlign = "left";
+  g.fillText(entry.date, PAD + 22, y + META_H/2 + 2);
+  g.fillText("날씨: " + (WEATHER[entry.weather] || entry.weather || "☀️ 맑음"), WX + 22, y + META_H/2 + 2);
+  y += META_H;
+
+  // 그림
+  if (img){
+    g.strokeRect(PAD, y, IW, picH);
+    g.drawImage(img, PAD + (IW - dw)/2, y + 20, dw, dh);
+    y += picH;
+  }
+
+  // 제목
+  g.strokeRect(PAD, y, IW, TITLE_H);
+  g.font = `700 50px ${HAND}`; g.fillStyle = INK;
+  g.fillText("제목: " + entry.title, PAD + 22, y + TITLE_H/2 + 2);
+  y += TITLE_H;
+
+  // 원고지
+  const gy = y;
+  g.lineWidth = 2; g.strokeStyle = GRID;
+  for (let r = 1; r < rows; r++){ g.beginPath(); g.moveTo(PAD, gy + r*CELL); g.lineTo(PAD + IW, gy + r*CELL); g.stroke(); }
+  for (let k = 1; k < COLS; k++){ g.beginPath(); g.moveTo(PAD + k*CELL, gy); g.lineTo(PAD + k*CELL, gy + gridH); g.stroke(); }
+  g.lineWidth = 4; g.strokeStyle = INK; g.strokeRect(PAD, gy, IW, gridH);
+  g.fillStyle = TEXT; g.font = `400 60px ${HAND}`; g.textAlign = "center";
+  cells.forEach((ch, i) => {
+    if (!ch || ch === " ") return;
+    const cx = PAD + (i % COLS) * CELL + CELL/2, cy = gy + Math.floor(i / COLS) * CELL + CELL/2 + 3;
+    g.fillText(ch, cx, cy);
+  });
+  y += gridH;
+
+  // 참 잘했어요 도장
+  g.save();
+  g.translate(W - PAD - 70, y - 20);
+  g.rotate(-14 * Math.PI / 180);
+  g.globalAlpha = 0.9;
+  g.fillStyle = "rgba(255,255,255,.6)";
+  g.beginPath(); g.arc(0, 0, 105, 0, Math.PI*2); g.fill();
+  g.strokeStyle = RED; g.lineWidth = 7;
+  g.beginPath(); g.arc(0, 0, 105, 0, Math.PI*2); g.stroke();
+  g.fillStyle = RED; g.font = `700 56px ${HAND}`; g.textAlign = "center";
+  g.fillText("참", 0, -28); g.fillText("잘했어요", 0, 34);
+  g.restore();
+
+  // 서명
+  g.globalAlpha = 1;
+  g.fillStyle = "#6B7A99"; g.font = `400 36px ${HAND}`; g.textAlign = "left";
+  g.fillText(`${entry.name}의 그림일기 · ${location.host}`, PAD, y + 70);
+  return c;
 }
 
 async function savePage(entry){
@@ -327,28 +413,21 @@ async function savePage(entry){
   if (entry.pending){ btn.textContent = "그림이 다 그려지면 저장할 수 있어요"; return; }
   btn.disabled = true; btn.textContent = "이미지 만드는 중…";
   try {
-    await loadH2C();
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    const page = $("#page");
-    page.classList.add("capturing");
-    const canvas = await html2canvas(page, {
-      scale: 2, backgroundColor: "#ffffff", useCORS: true,
-      ignoreElements: n => n.hasAttribute && n.hasAttribute("data-skip")
-    });
-    page.classList.remove("capturing");
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    showShot(dataUrl, entry);
+    const canvas = await drawDiaryCanvas(entry);
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.9));
+    if (!blob) throw new Error("no blob");
+    showShot(blob, entry);
     btn.textContent = "일기장 이미지로 저장하기";
   } catch (e) {
     console.error(e);
-    $("#page") && $("#page").classList.remove("capturing");
     btn.textContent = "저장이 안 됐어요. 화면을 캡처해 주세요";
   } finally {
     btn.disabled = false;
   }
 }
 
-function showShot(dataUrl, entry){
+function showShot(blob, entry){
+  const dataUrl = URL.createObjectURL(blob);
   const fname = `petdiary-${new Date().toISOString().slice(0,10)}.jpg`;
   const box = document.createElement("div");
   box.className = "shotbox";
@@ -364,7 +443,7 @@ function showShot(dataUrl, entry){
     </div>`;
   document.body.appendChild(box);
   document.body.style.overflow = "hidden";
-  const close = () => { box.remove(); document.body.style.overflow = ""; };
+  const close = () => { box.remove(); document.body.style.overflow = ""; URL.revokeObjectURL(dataUrl); };
   box.querySelector("#shotClose").onclick = close;
   box.addEventListener("click", e => { if (e.target === box) close(); });
   box.querySelector("#shotDl").onclick = () => {
@@ -374,7 +453,6 @@ function showShot(dataUrl, entry){
   const sh = box.querySelector("#shotShare");
   sh.onclick = async () => {
     try {
-      const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], fname, { type: "image/jpeg" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file] });
