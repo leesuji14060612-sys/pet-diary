@@ -117,6 +117,7 @@ button.primary:disabled{opacity:.5;cursor:wait}
 .shotinner{background:#fff;border-radius:10px;padding:14px;max-width:480px;width:100%;max-height:100%;overflow:auto;text-align:center}
 .shotinner img{max-width:100%;display:block;margin:0 auto;border:1px solid #DCE6F2;-webkit-touch-callout:default;user-select:auto}
 .shottip{margin:0 0 10px;color:#23407F;font-size:1rem}
+.outbtn{margin-top:8px;font:inherit;font-weight:700;padding:10px 14px;border-radius:6px;border:0;background:#23407F;color:#fff;cursor:pointer}
 .shotbtns{display:flex;gap:8px;margin-top:12px}
 .shotbtns button{flex:1;font:inherit;font-size:.9rem;padding:10px;border-radius:6px;border:1.5px solid #23407F;background:#fff;color:#23407F;cursor:pointer}
 .sign{text-align:right;margin-top:26px;font-family:"Gaegu",cursive;font-size:1rem;color:#6B7A99}
@@ -145,6 +146,10 @@ button.primary:disabled{opacity:.5;cursor:wait}
 .hlist img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
 .hlist small{display:block;padding:4px 6px;font-size:.75rem;color:#4A4A4A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{color:var(--muted);font-size:.9rem}
+.inapp{background:#FFF4C2;border:1.5px solid #E0A800;border-radius:8px;padding:10px 12px;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.inapp[hidden]{display:none}
+.inapp p{margin:0;flex:1;font-size:.9rem;color:#5A4500}
+.inapp button{font:inherit;font-size:.9rem;font-weight:700;padding:9px 12px;border-radius:6px;border:0;background:#23407F;color:#fff;cursor:pointer;white-space:nowrap}
 .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 16px}
 .tabs button{font:inherit;font-size:1rem;padding:11px 8px;border-radius:6px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
@@ -165,7 +170,7 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .bujeok .bhead b{display:block;font-size:1.6rem;margin:4px 0}
 .score{text-align:center;font-family:"Gaegu",cursive;font-size:3rem;font-weight:700;color:#C8321E;line-height:1}
 .score span{font-size:1.4rem}
-.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 10px}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 10px}
 .pillars div{background:#fff8e0;border:1.5px solid #C8321E;border-radius:4px;text-align:center;padding:6px 2px}
 .pillars small{display:block;font-size:.72rem;color:#8A5A3A}
 .pillars b{display:block;font-family:"Gowun Batang",serif;font-size:1.5rem;line-height:1.25;color:#3A2A1A}
@@ -186,6 +191,10 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 <main>
   <h1>우리 애 그림일기</h1>
   <p class="lede">사진 한 장으로 우리 애 그림일기, 생일 하나로 우리 애 사주까지.</p>
+  <div class="inapp" id="inapp" hidden>
+    <p>카톡·인스타 안에서는 이미지 저장이 안 돼요.</p>
+    <button id="openOut">크롬으로 열기</button>
+  </div>
   <nav class="tabs" role="tablist" aria-label="메뉴">
     <button role="tab" id="tabBtnDiary" aria-selected="true" aria-controls="tabDiary">📔 그림일기</button>
     <button role="tab" id="tabBtnSaju" aria-selected="false" aria-controls="tabSaju">🔮 사주·궁합</button>
@@ -523,7 +532,7 @@ function showShot(blob, entry){
   box.className = "shotbox";
   box.innerHTML = `
     <div class="shotinner" role="dialog" aria-label="일기장 이미지">
-      <p class="shottip">아래 이미지를 <b>꾹 눌러서</b><br>'이미지 저장'을 골라 주세요</p>
+      <p class="shottip">${IN_APP ? `카톡·인스타 안에서는 저장이 안 될 수 있어요.<br><button id="shotOut" class="outbtn">크롬으로 열어서 저장하기</button>` : `아래 이미지를 <b>꾹 눌러서</b><br>'이미지 저장'을 골라 주세요`}</p>
       <img src="${dataUrl}" alt="${escapeHtml(entry.name)}의 그림일기">
       <div class="shotbtns">
         <button id="shotShare">공유하기</button>
@@ -535,6 +544,7 @@ function showShot(blob, entry){
   document.body.style.overflow = "hidden";
   const close = () => { box.remove(); document.body.style.overflow = ""; URL.revokeObjectURL(dataUrl); };
   box.querySelector("#shotClose").onclick = close;
+  const so = box.querySelector("#shotOut"); if (so) so.onclick = openExternal;
   box.addEventListener("click", e => { if (e.target === box) close(); });
   box.querySelector("#shotDl").onclick = () => {
     const a = document.createElement("a"); a.href = dataUrl; a.download = fname;
@@ -749,6 +759,19 @@ function yearInfo(pet, year){
   };
 }
 
+// ===== 앱 안 브라우저(카톡·인스타 등) 감지 =====
+const UA = navigator.userAgent || "";
+const IN_KAKAO = /KAKAOTALK/i.test(UA);
+const IN_APP = IN_KAKAO || /Instagram|FBAN|FBAV|NAVER|Line\/|DaumApps|everytimeApp/i.test(UA);
+const IS_ANDROID = /Android/i.test(UA);
+function openExternal(){
+  const url = location.href;
+  if (IN_KAKAO) { location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(url); return; }
+  if (IS_ANDROID) { location.href = "intent://" + url.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end"; return; }
+  alert("오른쪽 위 메뉴(⋯)에서 'Safari로 열기'나 '다른 브라우저로 열기'를 눌러 주세요.");
+}
+if (IN_APP) { $("#inapp").hidden = false; $("#openOut").onclick = openExternal; }
+
 // ===== 탭 =====
 function showTab(which){
   const d = which === "diary";
@@ -851,7 +874,7 @@ function renderSaju(c){
   const h = sajuHead(c);
   const pills = c.mode === "match"
     ? `<div class="duo"><div><div class="who">${escapeHtml(c.ownerName)}</div><div class="pillars">${pillarBoxes(c.own)}</div></div><div><div class="who">${escapeHtml(c.name)}</div><div class="pillars">${pillarBoxes(c.pet)}</div></div></div>`
-    : `<div class="pillars">${pillarBoxes(c.pet, true)}</div>${elBar(c.pet)}`;
+    : `<div class="pillars three">${pillarBoxes(c.pet)}</div>${elBar(c.pet)}`;
   $("#sResult").innerHTML = `
     <div class="bujeok">
       <div class="bhead"><small>${escapeHtml(h.small)}</small><b>${escapeHtml(h.big)}</b></div>
@@ -946,7 +969,7 @@ async function drawSajuCanvas(c){
     drawPills(c.pet, PAD + half + 30, half, false, c.name);
     y += PILL_H;
   } else {
-    drawPills(c.pet, PAD, IW, true);
+    drawPills(c.pet, PAD, IW, false);
     y += PILL_H;
     const total = c.pet.elements.reduce((a,b)=>a+b,0) || 1;
     let bx = PAD;
