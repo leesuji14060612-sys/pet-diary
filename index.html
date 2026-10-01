@@ -193,7 +193,7 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .duo .who{text-align:center;font-family:"Gowun Batang",serif;font-size:.95rem;color:#C8321E;margin-top:6px}
 .duo .pillars{grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0}
 .duo .pillars b{font-size:1.15rem}
-.tabs{grid-template-columns:1fr 1fr 1fr}
+.tabs{grid-template-columns:1fr 1fr 1.3fr 1.1fr}
 .xmodes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
 .xmode{font:inherit;font-size:.9rem;padding:10px 4px;border-radius:6px;border:1.5px solid #8E7CC3;background:#fff;color:#5B4A99;cursor:pointer}
 .xmode.on{background:#8E7CC3;color:#fff}
@@ -218,6 +218,10 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .calgrid img{width:100%;display:block}
 .calgrid .cover{grid-column:1/-1}
 [hidden]{display:none !important}
+.shopintro{margin:0 0 6px;font-size:.92rem;color:#3E5B4A;line-height:1.6}
+.shopdrop{min-height:100px;margin-top:14px;border-color:#9CCB9F;background:#F2FAF2;color:#2E7D46}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.shopbtn{background:#2E7D46}
 </style>
 </head>
 <body>
@@ -229,9 +233,10 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
     <button id="openOut">크롬으로 열기</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="메뉴">
-    <button role="tab" id="tabBtnDiary" aria-selected="true" aria-controls="tabDiary">📔 그림일기</button>
-    <button role="tab" id="tabBtnSaju" aria-selected="false" aria-controls="tabSaju">🔮 사주·궁합</button>
+    <button role="tab" id="tabBtnDiary" aria-selected="true" aria-controls="tabDiary">📔 일기</button>
+    <button role="tab" id="tabBtnSaju" aria-selected="false" aria-controls="tabSaju">🔮 사주</button>
     <button role="tab" id="tabBtnExtra" aria-selected="false" aria-controls="tabExtra">💌 편지·달력</button>
+    <button role="tab" id="tabBtnShop" aria-selected="false" aria-controls="tabShop">🏫 알림장</button>
   </nav>
 <div id="tabDiary" role="tabpanel">
 
@@ -435,25 +440,63 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
   </section>
   <section id="xResult" aria-live="polite"></section>
 </div>
+<div id="tabShop" role="tabpanel" hidden>
+  <section class="sheet shopsheet" aria-label="유치원 알림장">
+    <p class="shopintro">애견유치원·펫호텔에서 보호자에게 보내는 <b>오늘의 알림장</b>이에요. 사진과 기록만 넣으면 아이가 쓴 그림일기와 선생님 한마디가 함께 나와요.</p>
+    <div class="row">
+      <div><label for="nShop">가게 이름</label><input type="text" id="nShop" placeholder="예: 쉬다가개 유치원" maxlength="20"></div>
+      <div><label for="nTeacher">선생님 이름 (선택)</label><input type="text" id="nTeacher" placeholder="예: 김민지 선생님" maxlength="12"></div>
+    </div>
+    <div class="row">
+      <div><label for="nName">아이 이름</label><input type="text" id="nName" placeholder="예: 콩이" maxlength="12"></div>
+      <div><label for="nKind">종류</label><select id="nKind"><option>강아지</option><option>고양이</option><option>기타</option></select></div>
+    </div>
+    <input type="file" id="nPhotos" accept="image/*" multiple class="sr">
+    <label for="nPhotos" class="drop shopdrop" id="nDrop"><span class="hint" id="nHint">오늘 찍은 사진 고르기 (최대 3장)</span></label>
+    <div class="calthumbs" id="nThumbs"></div>
+    <label class="check"><input type="checkbox" id="nDraw"> 사진을 파스텔 크레파스 그림으로 바꾸기 (그림 AI 사용)</label>
+    <div class="statgrid">
+      <div><label for="nMeal">식사</label><select id="nMeal"><option>잘 먹었어요</option><option>조금 남겼어요</option><option>거의 안 먹었어요</option><option>-</option></select></div>
+      <div><label for="nWalk">산책·놀이</label><select id="nWalk"><option>신나게 했어요</option><option>조금 했어요</option><option>쉬었어요</option><option>-</option></select></div>
+      <div><label for="nPotty">배변</label><select id="nPotty"><option>좋아요</option><option>조금 묽어요</option><option>안 했어요</option><option>-</option></select></div>
+      <div><label for="nMood">컨디션</label><select id="nMood"><option>최고예요</option><option>좋아요</option><option>조금 피곤해요</option><option>-</option></select></div>
+    </div>
+    <label for="nMemo">선생님 메모</label>
+    <textarea id="nMemo" placeholder="예: 오늘 처음으로 친구 보리랑 공놀이를 했어요. 낮잠은 1시간 잤어요." maxlength="300"></textarea>
+    <button class="primary shopbtn" id="nGo">알림장 만들기</button>
+    <p class="note" id="nNote" role="status"></p>
+  </section>
+  <section id="nResult" aria-live="polite"></section>
+</div>
 </main>
 
 <script>
 // 캔버스에 그리기 전에, 실제로 쓸 글자가 들어 있는 폰트 조각을 모두 불러와요 (한글 깨짐 방지)
-const SCRIPT_HANGUL = (() => { try { return [...new Set((document.currentScript.textContent.match(/[\uAC00-\uD7A3]/g) || []))].join(""); } catch { return ""; } })();
 // 이름 뒤에 자연스러운 조사 붙이기: 매실이 → 매실이가, 콩 → 콩이가
 function hasBatchim(word){ const ch = String(word).trim().slice(-1).charCodeAt(0); return ch >= 0xAC00 && ch <= 0xD7A3 && (ch - 0xAC00) % 28 !== 0; }
 function ga(name){ return name + (hasBatchim(name) ? "이가" : "가"); }
-async function ensureFonts(data){
-  const text = SCRIPT_HANGUL + (typeof data === "string" ? data : JSON.stringify(data || ""));
-  const faces = ["400 40px Gaegu", "700 40px Gaegu", '400 40px "Gowun Dodum"', '400 40px "Gowun Batang"', '700 40px "Gowun Batang"'];
-  try { await Promise.all(faces.map(f => document.fonts.load(f, text))); } catch {}
+// 그림 저장용 폰트는 사이트 안 /fonts 폴더의 "전체 글자" 폰트를 써요. (구글 폰트는 글자를 조각내서 불러와서 일부 글자가 다른 글씨체로 섞일 수 있어요)
+const FONT_FILES = [
+  ["PD Gaegu", "/fonts/Gaegu-Regular.woff2", "400"], ["PD Gaegu", "/fonts/Gaegu-Bold.woff2", "700"],
+  ["PD Dodum", "/fonts/GowunDodum-Regular.woff2", "400"],
+  ["PD Batang", "/fonts/GowunBatang-Regular.woff2", "400"], ["PD Batang", "/fonts/GowunBatang-Bold.woff2", "700"],
+];
+let fontsReady = null;
+function ensureFonts(){
+  if (!fontsReady){
+    fontsReady = Promise.all(FONT_FILES.map(([fam, url, weight]) => {
+      const f = new FontFace(fam, `url(${url}) format("woff2")`, { weight, style: "normal" });
+      return f.load().then(ff => { document.fonts.add(ff); }).catch(err => console.warn("폰트 불러오기 실패", url, err));
+    }));
+  }
+  return fontsReady;
 }
 const $ = s => document.querySelector(s);
 const KEY = "petdiary:v1";
 const WEATHER = {"맑음":"☀️ 맑음","흐림":"☁️ 흐림","비":"🌧️ 비","눈":"❄️ 눈","바람":"🍃 바람"};
 let file = null, thumb = null;
 
-const DAILY_LIMIT = 3;
+const DAILY_LIMIT = Infinity; // 횟수 제한 없음 (혼자 쓰는 동안)
 function usedToday(){
   try { const u = JSON.parse(localStorage.getItem("petdiary:uses")||"{}"); return u.d === new Date().toDateString() ? u.n : 0; } catch { return 0; }
 }
@@ -587,7 +630,7 @@ function loadImg(src){
 async function drawDiaryCanvas(entry){
   const W = 1080, PAD = 60, IW = W - PAD*2, COLS = 10, CELL = IW / COLS;
   const INK = "#23407F", GRID = "#9DB3D9", RED = "#E0483E", TEXT = "#2A2A2A";
-  const HAND = '"Gaegu", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+  const HAND = '"PD Gaegu", "Gaegu", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
   await ensureFonts(entry);
   const img = await loadImg(entry.img);
   const cells = cellsOf(entry.diary, COLS);
@@ -1094,7 +1137,7 @@ function drawPet(g, kind, fur, cx, cy, S, item){
 
 async function drawCharmCanvas(c){
   const W = 1080, H = 1680, RED = "#C8321E";
-  const SERIF = '"Gowun Batang", "Noto Serif KR", "Noto Serif CJK KR", "Nanum Myeongjo", serif', SANS = '"Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"Gaegu", sans-serif';
+  const SERIF = '"PD Batang", "Gowun Batang", "Noto Serif KR", "Noto Serif CJK KR", "Nanum Myeongjo", serif', SANS = '"PD Dodum", "Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"PD Gaegu", "Gaegu", sans-serif';
   await ensureFonts(c);
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d");
@@ -1159,17 +1202,18 @@ document.querySelectorAll(".tone").forEach(b => b.onclick = () => {
 
 // ===== 탭 =====
 function showTab(which){
-  [["diary","#tabDiary","#tabBtnDiary"],["saju","#tabSaju","#tabBtnSaju"],["extra","#tabExtra","#tabBtnExtra"]].forEach(([k, p, b]) => {
+  [["diary","#tabDiary","#tabBtnDiary"],["saju","#tabSaju","#tabBtnSaju"],["extra","#tabExtra","#tabBtnExtra"],["shop","#tabShop","#tabBtnShop"]].forEach(([k, p, b]) => {
     $(p).hidden = k !== which; $(b).setAttribute("aria-selected", k === which);
   });
 }
 $("#tabBtnDiary").onclick = () => showTab("diary");
 $("#tabBtnSaju").onclick = () => showTab("saju");
 $("#tabBtnExtra").onclick = () => showTab("extra");
+$("#tabBtnShop").onclick = () => showTab("shop");
 
 // ===== 사주 화면 =====
 let sMode = "pet";
-const SAJU_LIMIT = 5;
+const SAJU_LIMIT = Infinity; // 횟수 제한 없음 (혼자 쓰는 동안)
 function sajuUsed(){ try { const u = JSON.parse(localStorage.getItem("petdiary:saju")||"{}"); return u.d === new Date().toDateString() ? u.n : 0; } catch { return 0; } }
 function sajuMark(){ try { localStorage.setItem("petdiary:saju", JSON.stringify({d:new Date().toDateString(), n:sajuUsed()+1})); } catch {} }
 
@@ -1339,11 +1383,17 @@ function renderSaju(c){
 
 // ===== 사주 카드 이미지 =====
 function wrapLines(g, text, maxW){
+  // 띄어쓰기 단위로 줄을 바꿔요. 한 단어가 너무 길 때만 글자 단위로 끊어요.
   const lines = []; let cur = "";
-  for (const ch of Array.from(String(text))) {
-    const t = cur + ch;
-    if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = ch === " " ? "" : ch; }
-    else cur = t;
+  for (const word of String(text).split(/\s+/).filter(Boolean)){
+    const t = cur ? cur + " " + word : word;
+    if (g.measureText(t).width <= maxW){ cur = t; continue; }
+    if (cur) lines.push(cur);
+    if (g.measureText(word).width <= maxW){ cur = word; continue; }
+    cur = "";
+    for (const ch of Array.from(word)){
+      if (g.measureText(cur + ch).width > maxW && cur){ lines.push(cur); cur = ch; } else cur += ch;
+    }
   }
   if (cur) lines.push(cur);
   return lines;
@@ -1351,7 +1401,7 @@ function wrapLines(g, text, maxW){
 async function drawSajuCanvas(c){
   const W = 1080, PAD = 70, IW = W - PAD*2;
   const RED = "#C8321E", INK = "#3A2A1A", BROWN = "#8A5A3A";
-  const SERIF = '"Gowun Batang", "Nanum Myeongjo", serif', HAND = '"Gaegu", sans-serif', SANS = '"Gowun Dodum", "Malgun Gothic", sans-serif';
+  const SERIF = '"PD Batang", "Gowun Batang", "Nanum Myeongjo", serif', HAND = '"PD Gaegu", "Gaegu", sans-serif', SANS = '"PD Dodum", "Gowun Dodum", "Malgun Gothic", sans-serif';
   await ensureFonts(c);
   const h = sajuHead(c), secs = sajuSections(c).filter(x => x[1]);
 
@@ -1529,7 +1579,7 @@ $("#sbGo").onclick = async () => {
 };
 
 async function drawChatCanvas(c){
-  const W = 1080, PAD = 50, SANS = '"Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"Gaegu", sans-serif', SERIF = '"Gowun Batang", serif';
+  const W = 1080, PAD = 50, SANS = '"PD Dodum", "Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"PD Gaegu", "Gaegu", sans-serif', SERIF = '"PD Batang", "Gowun Batang", serif';
   await ensureFonts(c);
   const img = await loadImg(c.photo);
   const m = document.createElement("canvas").getContext("2d");
@@ -1629,7 +1679,7 @@ $("#lGo").onclick = async () => {
 
 async function drawLetterCanvas(c){
   const W = 1080, PAD = 90, IW = W - PAD*2;
-  const HAND = '"Gaegu", "Apple SD Gothic Neo", sans-serif', SERIF = '"Gowun Batang", "Noto Serif KR", serif', SANS = '"Gowun Dodum", sans-serif';
+  const HAND = '"PD Gaegu", "Gaegu", "Apple SD Gothic Neo", sans-serif', SERIF = '"PD Batang", "Gowun Batang", "Noto Serif KR", serif', SANS = '"PD Dodum", "Gowun Dodum", sans-serif';
   await ensureFonts(c);
   const m = document.createElement("canvas").getContext("2d");
   m.font = `400 46px ${HAND}`;
@@ -1836,7 +1886,7 @@ function smallPaw(g, x, y, s, col){
   [[-0.42,-0.2],[-0.15,-0.48],[0.15,-0.48],[0.42,-0.2]].forEach(([dx,dy]) => { g.beginPath(); g.ellipse(x+dx*s, y+dy*s, s*0.15, s*0.19, 0, 0, Math.PI*2); g.fill(); });
 }
 async function drawCalCover(name, year, src){
-  const HAND = '"Gaegu", sans-serif', SANS = '"Gowun Dodum", sans-serif';
+  const HAND = '"PD Gaegu", "Gaegu", sans-serif', SANS = '"PD Dodum", "Gowun Dodum", sans-serif';
   await ensureFonts(name);
   const cv = document.createElement("canvas"); cv.width = CAL.W; cv.height = CAL.H; const g = cv.getContext("2d");
   calBase(g);
@@ -1853,7 +1903,7 @@ async function drawCalCover(name, year, src){
 }
 async function drawCalMonth(name, year, mth, src, caption, special){
   await ensureFonts([name, caption, Object.values(holidaysOf(year)).join(""), Object.values(special).join("")]);
-  const HAND = '"Gaegu", sans-serif', SANS = '"Gowun Dodum", sans-serif';
+  const HAND = '"PD Gaegu", "Gaegu", sans-serif', SANS = '"PD Dodum", "Gowun Dodum", sans-serif';
   const cv = document.createElement("canvas"); cv.width = CAL.W; cv.height = CAL.H; const g = cv.getContext("2d");
   calBase(g);
   // 왼쪽 그림
@@ -1894,6 +1944,177 @@ async function drawCalMonth(name, year, mth, src, caption, special){
       g.fillStyle = CAL.RED; g.font = `700 24px ${SANS}`; g.textAlign = "left"; g.fillText(pet, cx + 12, cy + RH - 18);
     }
   }
+  return cv;
+}
+
+// ===== 유치원 알림장 =====
+let nImgs = [];
+$("#nPhotos").addEventListener("change", async e => {
+  const files = Array.from(e.target.files || []).slice(0, 3); if (!files.length) return;
+  nImgs = [];
+  for (const f of files){ const t = await makeThumb(f); if (t && t.url) nImgs.push(t); }
+  $("#nHint").textContent = `${nImgs.length}장 골랐어요 · 다시 누르면 바꿀 수 있어요`;
+  $("#nThumbs").innerHTML = nImgs.map(t => `<img src="${t.url}" alt="">`).join("");
+});
+$("#nGo").onclick = async () => {
+  const shop = $("#nShop").value.trim(), name = $("#nName").value.trim();
+  if (!shop){ $("#nNote").textContent = "가게 이름을 넣어 주세요."; $("#nShop").focus(); return; }
+  if (!name){ $("#nNote").textContent = "아이 이름을 넣어 주세요."; $("#nName").focus(); return; }
+  if (sajuUsed() >= SAJU_LIMIT){ $("#nNote").textContent = `오늘은 ${SAJU_LIMIT}번까지 만들 수 있어요.`; return; }
+  const status = { meal: $("#nMeal").value, walk: $("#nWalk").value, potty: $("#nPotty").value, mood: $("#nMood").value };
+  const body = { mode:"notice", shop, name, kind: $("#nKind").value, status, memo: $("#nMemo").value.trim() };
+  if (nImgs[0]) body.image = await blobToBase64(nImgs[0].blob);
+  $("#nGo").disabled = true; $("#nNote").textContent = "";
+  $("#nResult").innerHTML = `<p class="thinking" style="color:#2E7D46">${escapeHtml(ga(name))} 오늘 하루를 정리하는 중…</p>`;
+  try {
+    const r = await postExtra(body);
+    sajuMark();
+    let photos = nImgs.map(t => t.url), drawFail = 0;
+    if ($("#nDraw").checked && photos.length){
+      $("#nResult").innerHTML = `<p class="thinking" style="color:#2E7D46">크레파스로 그리는 중… (사진 한 장에 30초쯤)</p>`;
+      photos = await Promise.all(photos.map(async (u, i) => {
+        try {
+          const resp = await fetch("/api/drawing", { method:"POST", headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({ image: String(u).split(",")[1], name, kind: $("#nKind").value, title: r.title, diary: r.diary }) });
+          const dd = await resp.json().catch(() => ({}));
+          if (!resp.ok || !dd.image) throw new Error();
+          return await shrink(dd.image, 1200);
+        } catch { drawFail++; return u; }
+      }));
+    }
+    const cv = await drawNoticeCanvas({ shop, teacher: $("#nTeacher").value.trim(), name, status, photos, r });
+    const blob = await new Promise(res => cv.toBlob(res, "image/jpeg", 0.92));
+    $("#nResult").innerHTML = `${drawFail ? `<p class="note">${drawFail}장은 그림으로 못 바꿔서 사진을 그대로 넣었어요.</p>` : ""}<div class="letterwrap"><img src="${URL.createObjectURL(blob)}" alt="${escapeHtml(name)}의 알림장"></div>
+      <div class="actions"><button id="nShot" class="main">알림장 이미지로 저장하기</button><button id="nCopy">글만 복사하기</button></div>`;
+    $("#nShot").onclick = () => showShot(blob, { name });
+    $("#nCopy").onclick = async () => { try { await navigator.clipboard.writeText(`[${shop}] ${name}의 오늘\n\n${r.diary}\n\n선생님 한마디: ${r.teacher}`); $("#nCopy").textContent = "복사했어요"; } catch { $("#nCopy").textContent = "복사가 막혀 있어요"; } };
+    $("#nResult").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) { $("#nResult").innerHTML = ""; $("#nNote").textContent = e.message; }
+  finally { $("#nGo").disabled = false; }
+};
+
+async function drawNoticeCanvas(c){
+  await ensureFonts(c);
+  const W = 1080, PAD = 64, IW = W - PAD*2;
+  const SANS = '"PD Dodum", "Gowun Dodum", "Malgun Gothic", sans-serif', HAND = '"PD Gaegu", "Gaegu", sans-serif';
+  const INK = "#4A3B36", MINT = "#CDEBDD", MINTD = "#3F7A61", PEACH = "#FFD9C2", LAV = "#E4DDF7", BUTTER = "#FFF1B8", PINK = "#F7C9D4";
+  const imgs = (await Promise.all(c.photos.map(loadImg))).filter(Boolean);
+  const m = document.createElement("canvas").getContext("2d");
+  const setHand = (ctx, px) => { ctx.font = `400 ${px}px ${HAND}`; try { ctx.letterSpacing = "-1px"; } catch {} };
+  setHand(m, 46); const dLines = wrapLines(m, c.r.diary || "", IW - 180);
+  m.font = `34px ${SANS}`; const tLines = wrapLines(m, c.r.teacher || "", IW - 120);
+  const photoH = imgs.length ? 560 : 0;
+  const DLH = 70;
+  const H = 60 + 190 + 50 + (photoH ? photoH + 110 : 0) + 110 + 200 + 50 + (150 + dLines.length*DLH + 40) + 60 + (120 + tLines.length*52 + 40) + 320;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = Math.round(H);
+  const g = cv.getContext("2d");
+  g.textBaseline = "middle";
+
+  // 크림색 종이 + 점 무늬
+  g.fillStyle = "#FFF9F0"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "rgba(205,180,150,.22)";
+  for (let yy = 30; yy < H; yy += 36) for (let xx = 30; xx < W; xx += 36) { g.beginPath(); g.arc(xx, yy, 2, 0, Math.PI*2); g.fill(); }
+
+  // 작은 낙서 도구들
+  const paw = (x, y, s, col) => { g.fillStyle = col; g.beginPath(); g.ellipse(x, y + s*0.22, s*0.38, s*0.3, 0, 0, Math.PI*2); g.fill();
+    [[-0.38,-0.18],[-0.14,-0.44],[0.14,-0.44],[0.38,-0.18]].forEach(([dx,dy]) => { g.beginPath(); g.ellipse(x+dx*s, y+dy*s, s*0.13, s*0.17, 0, 0, Math.PI*2); g.fill(); }); };
+  const heart = (x, y, s, col) => { g.fillStyle = col; g.beginPath(); g.moveTo(x, y + s*0.35);
+    g.bezierCurveTo(x - s*0.9, y - s*0.2, x - s*0.35, y - s*0.8, x, y - s*0.3); g.bezierCurveTo(x + s*0.35, y - s*0.8, x + s*0.9, y - s*0.2, x, y + s*0.35); g.fill(); };
+  const tape = (x, y, w, rot, col) => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = col; g.globalAlpha = 0.75; g.fillRect(-w/2, -18, w, 36); g.restore(); g.globalAlpha = 1; };
+  const sparkle = (x, y, s, col) => { g.fillStyle = col; g.beginPath(); for (let k = 0; k < 8; k++){ const r = k % 2 ? s*0.3 : s, an = k*Math.PI/4 - Math.PI/2; g.lineTo(x + Math.cos(an)*r, y + Math.sin(an)*r); } g.closePath(); g.fill(); };
+
+  // 머리 카드
+  let y = 60;
+  g.fillStyle = MINT; g.beginPath(); g.roundRect(PAD - 14, y, IW + 28, 190, 40); g.fill();
+  g.textAlign = "left"; g.fillStyle = MINTD; g.font = `700 64px ${HAND}`; g.fillText(c.shop, PAD + 36, y + 72);
+  g.font = `30px ${SANS}`; g.fillStyle = "#5E8A75";
+  const d = new Date(); g.fillText(`오늘의 알림장 · ${d.getMonth()+1}월 ${d.getDate()}일 ${"일월화수목금토"[d.getDay()]}요일`, PAD + 38, y + 140);
+  paw(W - PAD - 70, y + 82, 70, "#FFFFFF"); heart(W - PAD - 150, y + 48, 26, "#F4A9B8"); sparkle(W - PAD - 20, y + 30, 16, "#FFFFFF");
+  y += 190 + 50;
+
+  // 폴라로이드 사진
+  if (imgs.length){
+    const n = Math.min(imgs.length, 3);
+    const pw = n === 1 ? 760 : n === 2 ? 520 : 400, ph = photoH - 90;
+    const xs = n === 1 ? [W/2] : n === 2 ? [W/2 - 220, W/2 + 220] : [W/2 - 300, W/2, W/2 + 300];
+    const rots = n === 1 ? [-0.02] : n === 2 ? [-0.05, 0.04] : [-0.06, 0.02, 0.06];
+    const tapes = [PINK, BUTTER, LAV];
+    imgs.slice(0, n).forEach((im, i) => {
+      g.save(); g.translate(xs[i], y + photoH/2); g.rotate(rots[i]);
+      g.shadowColor = "rgba(120,90,60,.18)"; g.shadowBlur = 24; g.shadowOffsetY = 8;
+      g.fillStyle = "#fff"; g.fillRect(-pw/2, -photoH/2, pw, photoH); g.shadowColor = "transparent";
+      const iw = pw - 40, k = Math.max(iw / im.width, ph / im.height), sw = iw/k, sh = ph/k;
+      g.drawImage(im, (im.width - sw)/2, (im.height - sh)/2, sw, sh, -iw/2, -photoH/2 + 20, iw, ph);
+      g.restore();
+      tape(xs[i], y + 4, 150, rots[i]*2, tapes[i % 3]);
+    });
+    y += photoH + 110;
+  }
+
+  // 제목 + 형광펜
+  g.textAlign = "center"; g.font = `700 60px ${HAND}`;
+  const title = c.r.title || `${c.name}의 하루`, tw = g.measureText(title).width;
+  g.fillStyle = BUTTER; g.beginPath(); g.roundRect(W/2 - tw/2 - 16, y + 8, tw + 32, 30, 15); g.fill();
+  g.fillStyle = INK; g.fillText(title, W/2, y); sparkle(W/2 + tw/2 + 40, y - 22, 16, "#F7B267"); sparkle(W/2 - tw/2 - 40, y + 10, 11, "#9DD3B8");
+  y += 110;
+
+  // 상태 칸 (파스텔)
+  const items = [["식사", c.status.meal, PEACH, "bowl"], ["산책·놀이", c.status.walk, MINT, "paw"], ["배변", c.status.potty, LAV, "leaf"], ["컨디션", c.status.mood, BUTTER, "sun"]];
+  const cw = (IW - 3*16) / 4;
+  items.forEach(([k, v, col, icon], i) => {
+    const x = PAD + i*(cw + 16), bad = /남겼|안 먹|묽|안 했|피곤|쉬었/.test(v);
+    g.fillStyle = col; g.beginPath(); g.roundRect(x, y, cw, 180, 30); g.fill();
+    const ix = x + cw/2, iy = y + 48;
+    g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.arc(ix, iy, 30, 0, Math.PI*2); g.fill();
+    if (icon === "bowl"){ g.fillStyle = "#F29E7A"; g.beginPath(); g.ellipse(ix, iy + 4, 20, 12, 0, 0, Math.PI); g.fill(); g.fillStyle = "#C9875F"; [-8,0,8].forEach(dx => { g.beginPath(); g.arc(ix + dx, iy, 5, 0, Math.PI*2); g.fill(); }); }
+    if (icon === "paw") paw(ix, iy + 2, 34, "#6FB394");
+    if (icon === "leaf"){ g.fillStyle = "#9B8BD6"; g.beginPath(); g.ellipse(ix, iy, 10, 18, 0.6, 0, Math.PI*2); g.fill(); }
+    if (icon === "sun"){ g.fillStyle = "#F5B841"; g.beginPath(); g.arc(ix, iy, 13, 0, Math.PI*2); g.fill(); g.strokeStyle = "#F5B841"; g.lineWidth = 3; for (let a2 = 0; a2 < 8; a2++){ const an = a2*Math.PI/4; g.beginPath(); g.moveTo(ix + Math.cos(an)*17, iy + Math.sin(an)*17); g.lineTo(ix + Math.cos(an)*23, iy + Math.sin(an)*23); g.stroke(); } }
+    g.textAlign = "center"; g.fillStyle = "#7A6A62"; g.font = `28px ${SANS}`; g.fillText(k, ix, y + 104);
+    const val = v === "-" ? "기록 없음" : v; let fs = 34; g.font = `700 ${fs}px ${HAND}`;
+    while (g.measureText(val).width > cw - 20 && fs > 22){ fs--; g.font = `700 ${fs}px ${HAND}`; }
+    g.fillStyle = bad ? "#C9673A" : INK; g.fillText(val, ix, y + 146);
+    if (bad){ g.fillStyle = "#F29E7A"; g.beginPath(); g.arc(x + cw - 22, y + 22, 8, 0, Math.PI*2); g.fill(); }
+  });
+  y += 200 + 50;
+
+  // 아이 일기 (줄 공책)
+  const dh = 150 + dLines.length*DLH + 40;
+  g.save(); g.shadowColor = "rgba(120,90,60,.12)"; g.shadowBlur = 18; g.shadowOffsetY = 6;
+  g.fillStyle = "#FFFFFF"; g.beginPath(); g.roundRect(PAD, y, IW, dh, 28); g.fill(); g.restore();
+  g.strokeStyle = "#F7C9D4"; g.lineWidth = 3; g.beginPath(); g.moveTo(PAD + 92, y + 20); g.lineTo(PAD + 92, y + dh - 20); g.stroke();
+  for (let i = 0; i < 5; i++){ g.fillStyle = "#FFF0E6"; g.beginPath(); g.arc(PAD + 44, y + 70 + i*((dh - 120)/4), 11, 0, Math.PI*2); g.fill(); }
+  paw(PAD + 140, y + 62, 34, "#F4A9B8");
+  g.textAlign = "left"; g.fillStyle = INK; g.font = `700 44px ${HAND}`; g.fillText(`${c.name}의 일기`, PAD + 176, y + 64);
+  g.strokeStyle = "#E8EEF6"; g.lineWidth = 2;
+  dLines.forEach((l, i) => {
+    const base = y + 150 + i*DLH;
+    g.beginPath(); g.moveTo(PAD + 110, base + 30); g.lineTo(PAD + IW - 30, base + 30); g.stroke();
+    g.fillStyle = "#4A4040"; setHand(g, 46); g.fillText(l, PAD + 120, base);
+  });
+  try { g.letterSpacing = "0px"; } catch {}
+  y += dh + 60;
+
+  // 선생님 한마디 (포스트잇)
+  const th = 120 + tLines.length*52 + 40;
+  g.save(); g.translate(W/2, y + th/2); g.rotate(0.012);
+  g.shadowColor = "rgba(120,90,60,.15)"; g.shadowBlur = 18; g.shadowOffsetY = 8;
+  g.fillStyle = "#FFF4BF"; g.fillRect(-IW/2 + 20, -th/2, IW - 40, th); g.shadowColor = "transparent";
+  g.textAlign = "left"; g.fillStyle = "#7A5B2E"; g.font = `700 40px ${HAND}`;
+  g.fillText(`${c.teacher ? c.teacher : "선생님"} 한마디`, -IW/2 + 64, -th/2 + 62);
+  g.fillStyle = "#4A3B36"; g.font = `34px ${SANS}`;
+  tLines.forEach((l, i) => g.fillText(l, -IW/2 + 64, -th/2 + 122 + i*52));
+  g.restore();
+  tape(W/2, y + 2, 170, -0.04, PINK);
+  y += th + 70;
+
+  // 마무리 도장
+  g.save(); g.translate(W/2, y + 60); g.rotate(-0.08);
+  g.strokeStyle = "#6FB394"; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, 70, 0, Math.PI*2); g.stroke();
+  g.fillStyle = "#6FB394"; g.textAlign = "center"; g.font = `700 32px ${HAND}`; g.fillText("오늘도", 0, -16); g.fillText("최고!", 0, 22);
+  g.restore();
+  g.textAlign = "center"; g.fillStyle = MINTD; g.font = `700 40px ${HAND}`; g.fillText(c.shop, W/2, y + 170);
+  heart(W/2 - g.measureText(c.shop).width/2 - 34, y + 170, 18, "#F4A9B8"); heart(W/2 + g.measureText(c.shop).width/2 + 34, y + 170, 18, "#F4A9B8");
   return cv;
 }
 </script>

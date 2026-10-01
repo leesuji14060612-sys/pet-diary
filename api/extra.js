@@ -73,6 +73,27 @@ ${b.image ? "첨부한 사진에 두 아이가 있어. 사진 속 자리, 자세
 {"title":"대화 제목 16자 이내","chat":[{"who":"A","text":"..."},{"who":"B","text":"..."}],"diaryA":"${an}의 일기","diaryB":"${bn}의 일기"}`;
 }
 
+function noticePrompt(b) {
+  const name = clip(b.name, 12) || "친구";
+  const kind = KINDS.includes(b.kind) ? b.kind : "강아지";
+  const st = b.status || {};
+  return `애견유치원·펫호텔에서 보호자에게 보내는 오늘의 알림장을 써 줘.
+가게 이름: ${clip(b.shop, 20) || "유치원"}
+아이: ${name} (${kind})
+오늘 기록 — 식사: ${clip(st.meal, 10) || "기록 없음"}, 산책: ${clip(st.walk, 10) || "기록 없음"}, 배변: ${clip(st.potty, 10) || "기록 없음"}, 컨디션: ${clip(st.mood, 10) || "기록 없음"}
+선생님 메모: ${clip(b.memo, 300) || "없음"}
+${b.image ? "첨부한 사진은 오늘 유치원에서 찍은 사진이야. 사진 속 모습(놀이, 자세, 표정, 친구)을 일기에 자연스럽게 넣어." : ""}
+
+두 부분을 써 줘.
+1) diary: ${name}의 1인칭 그림일기. 오늘 유치원에서 있었던 일을 귀엽고 신나게, 반말, 4~5문장, 200자 이내. 보호자를 보고 싶어 하는 마음을 한 번 넣어.
+2) teacher: 선생님이 보호자에게 쓰는 짧은 전달 사항. 정중한 존댓말, 2~3문장, 150자 이내. 메모와 기록 내용을 정확하게 전달해.
+규칙:
+- 기록과 메모에 있는 사실만 써. 없는 사건, 먹은 음식, 친구 이름을 지어내지 마.
+- 식사나 배변, 컨디션이 좋지 않다는 기록이 있으면 diary에서는 가볍게 넘기고, teacher에서 사실대로 차분하게 전달해. 진단이나 병명 추측은 절대 하지 마.
+- 자연스러운 한국어, 번역투 금지. 자기 이름을 3인칭으로 부르지 마. 이모지 쓰지 마.
+다른 말 없이 JSON 하나로만 답해: {"title":"오늘의 제목 16자 이내","diary":"...","teacher":"..."}`;
+}
+
 function calendarPrompt(b) {
   const name = clip(b.name, 12) || "우리 애";
   const kind = KINDS.includes(b.kind) ? b.kind : "반려동물";
@@ -96,10 +117,11 @@ module.exports = async (req, res) => {
   else if (b.mode === "calendar") prompt = calendarPrompt(b);
   else if (b.mode === "thanks") prompt = thanksPrompt(b);
   else if (b.mode === "siblings") prompt = siblingsPrompt(b);
+  else if (b.mode === "notice") prompt = noticePrompt(b);
   else return res.status(400).json({ error: "잘못된 요청이에요." });
 
   let content = prompt;
-  if (["letter", "thanks", "siblings"].includes(b.mode) && typeof b.image === "string" && b.image) {
+  if (["letter", "thanks", "siblings", "notice"].includes(b.mode) && typeof b.image === "string" && b.image) {
     if (b.image.length > 3_500_000) return res.status(400).json({ error: "사진이 너무 커요. 다른 사진을 골라 주세요." });
     content = [{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b.image } }, { type: "text", text: prompt }];
   }
@@ -124,6 +146,9 @@ module.exports = async (req, res) => {
       const scenes = Array.isArray(out.scenes) ? out.scenes.slice(0, 12).map(x => clip(x, 300)) : [];
       while (scenes.length < 12) scenes.push("");
       return res.status(200).json({ months, scenes, coverScene: clip(out.coverScene, 300) });
+    }
+    if (b.mode === "notice") {
+      return res.status(200).json({ title: clip(out.title, 30), diary: String(out.diary || "").trim().slice(0, 400), teacher: String(out.teacher || "").trim().slice(0, 300) });
     }
     if (b.mode === "siblings") {
       const chat = (Array.isArray(out.chat) ? out.chat : []).slice(0, 14)
