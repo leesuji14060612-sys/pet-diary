@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리 애 그림일기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#DCE6F2; --paper:#FFFFFF; --ink:#23407F; --pencil:#4A4A4A;
+  --grid:#9DB3D9; --stamp:#E0483E; --marker:#FFE45C; --muted:#6B7A99;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --desk:#1B2233; --paper:#F3F1EA; --ink:#23407F; --pencil:#3D3D3D;
+    --grid:#9DB3D9; --muted:#AEB9D1;
+  }
+}
+:root[data-theme="dark"]{
+  --desk:#1B2233; --paper:#F3F1EA; --ink:#23407F; --pencil:#3D3D3D;
+  --grid:#9DB3D9; --muted:#AEB9D1;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--desk); color:var(--pencil);
+  font-family:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  line-height:1.6;
+}
+main{max-width:520px;margin:0 auto;padding:28px 16px 48px}
+h1{
+  font-family:"Gaegu","Apple SD Gothic Neo",cursive; font-weight:700;
+  font-size:2.6rem; line-height:1.1; margin:0 0 6px; color:var(--ink);
+}
+.lede{margin:0 0 24px;color:var(--muted);font-size:.95rem}
+.sheet{
+  background:var(--paper); border-radius:6px; padding:18px;
+  box-shadow:0 1px 0 var(--grid), 0 8px 24px rgba(35,64,127,.12);
+}
+label{display:block;font-size:.85rem;color:#4A4A4A;margin:14px 0 6px}
+input[type=text],textarea,select{
+  width:100%; font:inherit; font-size:1rem; color:#2A2A2A;
+  border:1.5px solid var(--grid); border-radius:4px; padding:10px 12px; background:#fff;
+}
+textarea{min-height:64px;resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,#photo:focus-visible + .drop{
+  outline:3px solid var(--marker); outline-offset:2px;
+}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:2px dashed var(--grid); border-radius:6px; min-height:180px; cursor:pointer;
+  color:var(--ink); text-align:center; padding:12px; position:relative; overflow:hidden; background:#F7FAFF;
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.drop{margin:0}
+.drop img{max-width:100%;max-height:260px;border-radius:4px;display:block}
+.drop .hint{font-family:"Gaegu",cursive;font-size:1.4rem}
+button.primary{
+  margin-top:18px; width:100%; font:inherit; font-family:"Gaegu",cursive; font-weight:700;
+  font-size:1.5rem; padding:12px; border:0; border-radius:6px;
+  background:var(--ink); color:#fff; cursor:pointer;
+}
+button.primary:disabled{opacity:.5;cursor:wait}
+.note{font-size:.85rem;color:var(--stamp);margin:10px 0 0;min-height:1.2em}
+
+/* 그림일기 page */
+.diary{margin-top:28px;display:none}
+.diary.show{display:block}
+.meta{
+  display:grid;grid-template-columns:1fr auto;border:2px solid var(--ink);border-bottom:0;
+  font-family:"Gaegu",cursive;font-size:1.25rem;color:var(--ink);
+}
+.meta div{padding:6px 10px}
+.meta div+div{border-left:2px solid var(--ink)}
+.picture{border:2px solid var(--ink);border-bottom:0;background:#fff;padding:10px;display:flex;justify-content:center}
+.picture{position:relative;min-height:200px;align-items:center}
+.picture img{max-width:100%;max-height:360px;border-radius:2px}
+.picture.pending img{filter:grayscale(1) blur(2px);opacity:.35}
+.picture .drawing{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:"Gaegu",cursive;font-size:1.4rem;color:var(--ink);text-align:center;padding:12px}
+.title{
+  border:2px solid var(--ink);border-bottom:0;padding:6px 10px;
+  font-family:"Gaegu",cursive;font-weight:700;font-size:1.4rem;color:var(--ink);
+}
+.wongoji{
+  display:grid;grid-template-columns:repeat(10,1fr);
+  border-top:2px solid var(--ink);border-left:2px solid var(--ink);
+}
+.wongoji span{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);
+  font-family:"Gaegu",cursive;font-size:clamp(1.05rem,4.6vw,1.45rem);color:#2A2A2A;background:#fff;
+}
+.wongoji span:nth-child(10n){border-right:2px solid var(--ink)}
+.wongoji span.last{border-bottom:2px solid var(--ink)}
+.stampwrap{position:relative}
+.stamp{
+  position:absolute;right:-6px;bottom:-18px;width:96px;height:96px;border-radius:50%;
+  border:3px solid var(--stamp);color:var(--stamp);display:flex;align-items:center;justify-content:center;
+  text-align:center;font-family:"Gaegu",cursive;font-weight:700;font-size:1.15rem;line-height:1.1;
+  transform:rotate(-14deg) scale(0);opacity:0;background:rgba(255,255,255,.55);pointer-events:none;
+}
+.stamp.on{animation:thunk .35s .25s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes thunk{to{transform:rotate(-14deg) scale(1);opacity:.9}}
+@media (prefers-reduced-motion: reduce){.stamp.on{animation:none;transform:rotate(-14deg);opacity:.9}}
+.thinking{font-family:"Gaegu",cursive;font-size:1.4rem;color:var(--ink);padding:18px 4px}
+
+.actions{display:flex;gap:8px;margin-top:30px}
+.actions button{
+  flex:1;font:inherit;font-size:.95rem;padding:10px;border-radius:6px;cursor:pointer;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .actions button{color:#C9D6F2;border-color:#C9D6F2}}
+:root[data-theme="dark"] .actions button{color:#C9D6F2;border-color:#C9D6F2}
+
+.history{margin-top:40px}
+.history h2{font-family:"Gaegu",cursive;font-size:1.6rem;color:var(--ink);margin:0 0 10px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .history h2,:root:not([data-theme="light"]) h1{color:#C9D6F2}}
+:root[data-theme="dark"] .history h2,:root[data-theme="dark"] h1{color:#C9D6F2}
+.hlist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hlist button{
+  border:0;padding:0;background:var(--paper);border-radius:4px;overflow:hidden;cursor:pointer;text-align:left;font:inherit;
+}
+.hlist img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.hlist small{display:block;padding:4px 6px;font-size:.75rem;color:#4A4A4A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>우리 애 그림일기</h1>
+  <p class="lede">사진 한 장 올리면, 우리 애가 직접 쓴 오늘의 일기를 받아볼 수 있어요.</p>
+
+  <section class="sheet" aria-label="일기 쓰기">
+    <input type="file" id="photo" accept="image/*" class="sr">
+    <label for="photo" class="drop" id="drop">
+      <span class="hint" id="hint">여기를 눌러 오늘 사진 고르기</span>
+    </label>
+
+    <div class="row">
+      <div>
+        <label for="name">이름</label>
+        <input type="text" id="name" placeholder="매실이" maxlength="12">
+      </div>
+      <div>
+        <label for="kind">종류</label>
+        <select id="kind">
+          <option>고양이</option><option>강아지</option><option>토끼</option><option>햄스터</option><option>새</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="persona">성격 한 줄 (선택)</label>
+    <input type="text" id="persona" placeholder="예: 겁 많은데 간식 앞에선 용감함" maxlength="60">
+
+    <label for="today">오늘 있었던 일 (선택)</label>
+    <textarea id="today" placeholder="예: 병원 다녀옴, 새 장난감 받음" maxlength="200"></textarea>
+
+    <button class="primary" id="go">일기 써 달라고 하기</button>
+    <p class="note" id="note" role="status"></p>
+  </section>
+
+  <section class="diary" id="diary" aria-live="polite"></section>
+
+  <section class="history">
+    <h2>지난 일기</h2>
+    <div class="hlist" id="hlist"></div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const KEY = "petdiary:v1";
+const WEATHER = {"맑음":"☀️ 맑음","흐림":"☁️ 흐림","비":"🌧️ 비","눈":"❄️ 눈","바람":"🍃 바람"};
+let file = null, thumb = null;
+
+const DAILY_LIMIT = 3;
+function usedToday(){
+  try { const u = JSON.parse(localStorage.getItem("petdiary:uses")||"{}"); return u.d === new Date().toDateString() ? u.n : 0; } catch { return 0; }
+}
+function markUse(){
+  try { localStorage.setItem("petdiary:uses", JSON.stringify({d:new Date().toDateString(), n:usedToday()+1})); } catch {}
+}
+function blobToBase64(b){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(b); });
+}
+
+function loadAll(){ try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } }
+function saveAll(list){ try { localStorage.setItem(KEY, JSON.stringify(list.slice(0,12))); } catch {} }
+
+function makeThumb(f){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, 1024 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      const url = c.toDataURL("image/jpeg",0.8);
+      URL.revokeObjectURL(img.src);
+      c.toBlob(b => res({url, blob:b}), "image/jpeg", 0.85);
+    };
+    img.onerror = () => res(null);
+    img.src = URL.createObjectURL(f);
+  });
+}
+
+$("#photo").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const t = await makeThumb(f);
+  if (!t || !t.blob){
+    file = null; thumb = null;
+    $("#note").textContent = "이 사진 형식은 읽을 수 없어요. 갤러리에서 JPG 사진을 골라 주세요.";
+    return;
+  }
+  file = t.blob; thumb = t.url;
+  const drop = $("#drop");
+  drop.querySelector("img")?.remove();
+  $("#hint").hidden = true;
+  if (thumb){ const im = new Image(); im.src = thumb; im.alt = "고른 사진"; drop.appendChild(im); }
+  $("#note").textContent = "";
+});
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${"일월화수목금토"[d.getDay()]}요일`;
+}
+
+function wongoji(text){
+  const cols = 10, cells = [];
+  const paras = String(text).trim().split(/\n+/);
+  paras.forEach(p => {
+    const chars = Array.from(" " + p.trim());
+    chars.forEach(ch => cells.push(ch));
+    while (cells.length % cols) cells.push("");
+  });
+  while (cells.length < cols*6) cells.push("");
+  const total = cells.length;
+  return cells.map((c,i) => `<span class="${i >= total-cols ? "last":""}">${c === " " ? "" : escapeHtml(c)}</span>`).join("");
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function render(entry, animate){
+  const el = $("#diary");
+  el.innerHTML = `
+    <div class="meta"><div>${escapeHtml(entry.date)}</div><div>날씨: ${escapeHtml(WEATHER[entry.weather] || entry.weather || "☀️ 맑음")}</div></div>
+    ${entry.img ? `<div class="picture ${entry.pending ? "pending" : ""}" id="pic"><img src="${entry.img}" alt="${escapeHtml(entry.name)} 그림">${entry.pending ? `<div class="drawing">${escapeHtml(entry.name)} 모습을 크레파스로 그리는 중…<br>(30초쯤 걸려요)</div>` : ""}${entry.drawErr ? `<div class="drawing" style="position:static;font-size:1rem;color:var(--stamp)">${escapeHtml(entry.drawErr)}</div>` : ""}</div>` : ""}
+    <div class="title">제목: ${escapeHtml(entry.title)}</div>
+    <div class="stampwrap">
+      <div class="wongoji">${wongoji(entry.diary)}</div>
+      <div class="stamp ${animate ? "on" : "on"}" aria-hidden="true">참<br>잘했어요</div>
+    </div>
+    <div class="actions">
+      <button id="copy">글 복사하기</button>
+      ${entry.drawn ? `<button id="save">그림 저장하기</button>` : ""}
+      <button id="again">다시 써 달라고 하기</button>
+    </div>`;
+  el.classList.add("show");
+  $("#copy").onclick = async () => {
+    const t = `${entry.date} ${entry.name}의 일기\n제목: ${entry.title}\n\n${entry.diary}`;
+    try { await navigator.clipboard.writeText(t); $("#copy").textContent = "복사했어요"; }
+    catch { $("#copy").textContent = "복사가 막혀 있어요"; }
+  };
+  $("#again").onclick = () => write();
+  const sv = $("#save");
+  if (sv) sv.onclick = () => { const a = document.createElement("a"); a.href = entry.img; a.download = `${entry.name}-그림일기.png`; document.body.appendChild(a); a.click(); a.remove(); };
+  el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+}
+
+function renderHistory(){
+  const list = loadAll(), box = $("#hlist");
+  if (!list.length){ box.innerHTML = `<p class="empty">아직 쓴 일기가 없어요. 첫 사진을 올려 보세요.</p>`; box.style.display="block"; return; }
+  box.style.display = "";
+  box.innerHTML = list.map((e,i) => `<button data-i="${i}">${e.img ? `<img src="${e.img}" alt="">` : ""}<small>${escapeHtml(e.title)}</small></button>`).join("");
+  box.querySelectorAll("button").forEach(b => b.onclick = () => render(loadAll()[+b.dataset.i], false));
+}
+
+const ERR = {
+  not_granted:"Claude 사용을 허락해야 일기를 쓸 수 있어요.",
+  rate_limited:"요청이 많아요. 잠시 후 다시 눌러 주세요.",
+  image_rejected:"이 사진은 읽을 수 없어요. 다른 사진(JPG·PNG)을 골라 주세요.",
+  images_unavailable:"이 화면에서는 사진을 보낼 수 없어요.",
+  refused:"이 사진으로는 일기를 쓸 수 없어요. 다른 사진을 골라 주세요.",
+  invalid_json:"일기가 이상하게 써졌어요. 한 번 더 눌러 주세요.",
+  session_expired:"다시 로그인해 주세요."
+};
+
+async function write(){
+  if (!file){ $("#note").textContent = "먼저 사진을 골라 주세요."; return; }
+  if (usedToday() >= DAILY_LIMIT){ $("#note").textContent = `오늘은 ${DAILY_LIMIT}번까지 쓸 수 있어요. 내일 또 만나요!`; return; }
+  const name = $("#name").value.trim() || "우리 애";
+  const kind = $("#kind").value;
+  const persona = $("#persona").value.trim();
+  const today = $("#today").value.trim();
+  $("#note").textContent = "";
+  $("#go").disabled = true;
+  const el = $("#diary");
+  el.classList.add("show");
+  el.innerHTML = `<p class="thinking">${escapeHtml(name)}(이)가 연필 깎는 중…</p>`;
+  try {
+    const image = await blobToBase64(file);
+    const resp = await fetch("/api/diary", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ image, name, kind, persona, today })
+    });
+    const r = await resp.json().catch(() => ({}));
+    if (!resp.ok || typeof r.diary !== "string") throw new Error(r.error || "fail");
+    markUse();
+    const entry = {
+      date: todayStr(), name, weather: String(r.weather || "맑음"),
+      title: String(r.title || `${name}의 하루`).slice(0,20),
+      diary: r.diary.slice(0,260), img: thumb, scene: String(r.scene || "")
+    };
+    entry.pending = true;
+    render(entry, true);
+    drawPicture(entry, image);
+  } catch (e) {
+    el.classList.remove("show"); el.innerHTML = "";
+    $("#note").textContent = (e && e.message && e.message !== "fail" && e.message.length < 80) ? e.message : "일기를 쓰다 멈췄어요. 한 번 더 눌러 주세요.";
+  } finally {
+    $("#go").disabled = false;
+  }
+}
+
+function shrink(dataUrl, max){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",0.8));
+    };
+    img.onerror = () => res(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function drawPicture(entry, image){
+  try {
+    const resp = await fetch("/api/drawing", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ image, name: entry.name, kind: $("#kind").value, title: entry.title, diary: entry.diary, scene: entry.scene })
+    });
+    const r = await resp.json().catch(() => ({}));
+    if (!resp.ok || !r.image) throw new Error(r.error || "그림을 그리다 멈췄어요.");
+    entry.img = r.image; entry.drawn = true;
+  } catch (e) {
+    entry.drawErr = (e && e.message) || "그림을 그리다 멈췄어요.";
+  }
+  entry.pending = false;
+  render(entry, false);
+  delete entry.drawErr;
+  const saved = Object.assign({}, entry, { img: entry.img ? await shrink(entry.img, 640) : null });
+  const list = loadAll(); list.unshift(saved); saveAll(list);
+  renderHistory();
+}
+
+$("#go").addEventListener("click", () => write());
+renderHistory();
+</script>
+</body>
+</html>

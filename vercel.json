@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/diary.js": { "maxDuration": 30 },
+    "api/drawing.js": { "maxDuration": 60 }
+  }
+}
