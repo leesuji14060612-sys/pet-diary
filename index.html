@@ -229,6 +229,10 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
 .brand{display:flex;align-items:center;gap:10px}
 .brand .brandmark{width:46px;height:46px;flex:none;transform:rotate(-10deg)}
 .brand small{font-size:.62em;color:#E0483E;margin-left:2px}
+.styles{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.sty{font:inherit;font-size:.78rem;padding:9px 0;border-radius:6px;border:1.5px solid #C9B8EE;background:#fff;color:#5B4A99;cursor:pointer;white-space:nowrap}
+.sty.on{background:#8E7CC3;border-color:#8E7CC3;color:#fff}
+@media (max-width:380px){.styles{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
@@ -275,6 +279,15 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
       <button type="button" class="tone" data-tone="시크" role="radio" aria-checked="false">😎 시크</button>
       <button type="button" class="tone" data-tone="애교" role="radio" aria-checked="false">🥺 애교</button>
       <button type="button" class="tone" data-tone="허세" role="radio" aria-checked="false">👑 허세</button>
+    </div>
+
+    <label>그림체</label>
+    <div class="styles" id="dStyle" role="radiogroup" aria-label="그림체">
+      <button type="button" class="sty on" data-s="크레파스" role="radio" aria-checked="true">🖍️ 크레파스</button>
+      <button type="button" class="sty" data-s="색연필" role="radio" aria-checked="false">✏️ 색연필</button>
+      <button type="button" class="sty" data-s="수채화" role="radio" aria-checked="false">🎨 수채화</button>
+      <button type="button" class="sty" data-s="동화책" role="radio" aria-checked="false">📖 동화책</button>
+      <button type="button" class="sty" data-s="스티커" role="radio" aria-checked="false">🏷️ 스티커</button>
     </div>
 
     <label for="today">오늘 있었던 일 (선택)</label>
@@ -440,6 +453,14 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
       <input type="file" id="cPhotos" accept="image/*" multiple class="sr">
       <label for="cPhotos" class="drop caldrop" id="cDrop"><span class="hint" id="cHint">그림일기 그림이나 사진 고르기 (최대 13장)<br><small>첫 장은 표지, 그다음부터 1월~12월이에요. 모자라면 반복해서 써요.</small></span></label>
       <div class="calthumbs" id="cThumbs"></div>
+      <label>그림체</label>
+    <div class="styles" id="cStyle" role="radiogroup" aria-label="그림체">
+      <button type="button" class="sty on" data-s="크레파스" role="radio" aria-checked="true">🖍️ 크레파스</button>
+      <button type="button" class="sty" data-s="색연필" role="radio" aria-checked="false">✏️ 색연필</button>
+      <button type="button" class="sty" data-s="수채화" role="radio" aria-checked="false">🎨 수채화</button>
+      <button type="button" class="sty" data-s="동화책" role="radio" aria-checked="false">📖 동화책</button>
+      <button type="button" class="sty" data-s="스티커" role="radio" aria-checked="false">🏷️ 스티커</button>
+    </div>
       <label class="check"><input type="checkbox" id="cDraw" checked> 사진을 그림일기 그림체로 바꿔서 넣기 (그림 AI 사용)</label>
       <button class="primary" id="cGo">달력 만들기</button>
     </div>
@@ -461,7 +482,15 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
     <input type="file" id="nPhotos" accept="image/*" multiple class="sr">
     <label for="nPhotos" class="drop shopdrop" id="nDrop"><span class="hint" id="nHint">오늘 찍은 사진 고르기 (최대 3장)</span></label>
     <div class="calthumbs" id="nThumbs"></div>
-    <label class="check"><input type="checkbox" id="nDraw"> 사진을 파스텔 크레파스 그림으로 바꾸기 (그림 AI 사용)</label>
+    <label class="check"><input type="checkbox" id="nDraw"> 사진을 그림으로 바꾸기 (그림 AI 사용)</label>
+    <label>그림체</label>
+    <div class="styles" id="nStyle" role="radiogroup" aria-label="그림체">
+      <button type="button" class="sty on" data-s="크레파스" role="radio" aria-checked="true">🖍️ 크레파스</button>
+      <button type="button" class="sty" data-s="색연필" role="radio" aria-checked="false">✏️ 색연필</button>
+      <button type="button" class="sty" data-s="수채화" role="radio" aria-checked="false">🎨 수채화</button>
+      <button type="button" class="sty" data-s="동화책" role="radio" aria-checked="false">📖 동화책</button>
+      <button type="button" class="sty" data-s="스티커" role="radio" aria-checked="false">🏷️ 스티커</button>
+    </div>
     <div class="statgrid">
       <div><label for="nMeal">식사</label><select id="nMeal"><option>잘 먹었어요</option><option>조금 남겼어요</option><option>거의 안 먹었어요</option><option>-</option></select></div>
       <div><label for="nWalk">산책·놀이</label><select id="nWalk"><option>신나게 했어요</option><option>조금 했어요</option><option>쉬었어요</option><option>-</option></select></div>
@@ -575,7 +604,7 @@ function render(entry, animate){
   el.innerHTML = `
     <div class="page" id="page">
       <div class="meta"><div>${escapeHtml(entry.date)}</div><div>날씨: ${escapeHtml(WEATHER[entry.weather] || entry.weather || "☀️ 맑음")}</div></div>
-      ${entry.img ? `<div class="picture ${entry.pending ? "pending" : ""}" id="pic"><img src="${entry.img}" alt="${escapeHtml(entry.name)} 그림">${entry.pending ? `<div class="drawing" data-skip>${escapeHtml(entry.name)} 모습을 크레파스로 그리는 중…<br>(30초쯤 걸려요)</div>` : ""}</div>` : ""}
+      ${entry.img ? `<div class="picture ${entry.pending ? "pending" : ""}" id="pic"><img src="${entry.img}" alt="${escapeHtml(entry.name)} 그림">${entry.pending ? `<div class="drawing" data-skip>${escapeHtml(entry.name)} 모습을 ${escapeHtml(entry.style || "크레파스")} 그림으로 그리는 중…<br>(30초쯤 걸려요)</div>` : ""}</div>` : ""}
       <div class="title">제목: ${escapeHtml(entry.title)}</div>
       <div class="stampwrap">
         <div class="wongoji">${wongoji(entry.diary)}</div>
@@ -778,14 +807,22 @@ function showShot(blob, entry){
   };
 }
 
+const ART_STYLES = {
+  "크레파스": { lead: "a cute crayon drawing, like a picture a Korean elementary school kid draws in a picture diary", style: "wax crayon and colored pencil on white paper, simple slightly wobbly lines, soft pastel colors, plain white background" },
+  "색연필": { lead: "a gentle colored pencil drawing", style: "soft colored pencils on white drawing paper, delicate visible hatching strokes, light pastel colors, airy and calm, plain white background" },
+  "수채화": { lead: "a soft watercolor painting", style: "light watercolor washes on textured watercolor paper, gentle bleeding edges, pale pastel colors, lots of white space, plain white background" },
+  "동화책": { lead: "a warm children's picture book illustration", style: "gouache picture book style, soft rounded shapes, cozy warm light, gentle pastel palette, simple soft background" },
+  "스티커": { lead: "a cute kawaii sticker illustration", style: "flat pastel colors, simple clean shapes, thick white die-cut outline around the whole pet, soft light gray shadow, plain white background" },
+};
 function artPrompt(e){
   const animal = {"고양이":"cat","강아지":"dog","토끼":"rabbit","햄스터":"hamster","새":"bird"}[e.kind] || "pet";
-  return `Redraw the ${animal} in the attached photo as a cute crayon drawing, like a picture a Korean elementary school kid draws in a picture diary.
+  const st = ART_STYLES[e.style] || ART_STYLES["크레파스"];
+  return `Redraw the ${animal} in the attached photo as ${st.lead}.
 Keep the ${animal} recognizable: same fur colors, markings and body shape as in the photo.
 Draw ONLY this scene, and nothing else: ${e.scene}
 Do not add any people, animals, objects or props that are not in that scene. Ignore the photo's background.
 No text, letters, numbers, labels or speech bubbles anywhere in the image.
-Style: wax crayon and colored pencil on white paper, simple slightly wobbly lines, soft pastel colors, plain white background. Square image.`;
+Style: ${st.style}. Square image.`;
 }
 
 function renderHistory(){
@@ -832,7 +869,7 @@ async function write(){
       id: Date.now(), kind,
       date: todayStr(), name, weather: String(r.weather || "맑음"),
       title: String(r.title || `${name}의 하루`).slice(0,20),
-      diary: r.diary.slice(0,260), img: thumb, scene: String(r.scene || "")
+      diary: r.diary.slice(0,260), img: thumb, scene: String(r.scene || ""), style: styleOf("dStyle")
     };
     entry.pending = true;
     render(entry, true);
@@ -864,7 +901,7 @@ async function drawPicture(entry, image){
   try {
     const resp = await fetch("/api/drawing", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ image, name: entry.name, kind: $("#kind").value, title: entry.title, diary: entry.diary, scene: entry.scene })
+      body: JSON.stringify({ image, name: entry.name, kind: $("#kind").value, title: entry.title, diary: entry.diary, scene: entry.scene, style: entry.style || styleOf("dStyle") })
     });
     const r = await resp.json().catch(() => ({}));
     if (!resp.ok || !r.image) throw new Error(r.error || "그림을 그리다 멈췄어요.");
@@ -1203,6 +1240,12 @@ async function drawCharmCanvas(c){
   g.fillText(`${c.basis} ${c.date} · 재미로 보는 행운 부적`, 110, H-120);
   return cv;
 }
+
+// ===== 그림체 고르기 =====
+document.querySelectorAll(".styles").forEach(box => box.querySelectorAll(".sty").forEach(b => b.onclick = () => {
+  box.querySelectorAll(".sty").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
+}));
+function styleOf(id){ const on = document.querySelector(`#${id} .sty.on`); return on ? on.dataset.s : "크레파스"; }
 
 // ===== 일기 말투 =====
 let diaryTone = "기본";
@@ -1821,13 +1864,13 @@ $("#cGo").onclick = async () => {
       const scenes = [r.coverScene, ...(r.scenes || [])];
       const kind = $("#xKind").value;
       let done = 0, ok = 0, stop = false;
-      const show = () => { $("#xResult").innerHTML = `<p class="thinking">${escapeHtml(ga(name))} 크레파스로 그리는 중… ${done}/13<br><small>한 장에 30초쯤 걸려서 몇 분 걸려요. 화면을 끄지 말아 주세요.</small></p>`; };
+      const show = () => { $("#xResult").innerHTML = `<p class="thinking">${escapeHtml(ga(name))} 그림으로 그리는 중… ${done}/13<br><small>한 장에 30초쯤 걸려서 몇 분 걸려요. 화면을 끄지 말아 주세요.</small></p>`; };
       show();
       const jobs = srcs.map((src, i) => async () => {
         if (stop) { drawFail++; return; }
         try {
           const resp = await fetch("/api/drawing", { method:"POST", headers:{"Content-Type":"application/json"},
-            body: JSON.stringify({ image: String(src).split(",")[1], name, kind, title: i === 0 ? `${name}의 달력 표지` : `${i}월`, diary: i === 0 ? "" : (r.months[i-1] || ""), scene: scenes[i] || "" }) });
+            body: JSON.stringify({ image: String(src).split(",")[1], name, kind, title: i === 0 ? `${name}의 달력 표지` : `${i}월`, diary: i === 0 ? "" : (r.months[i-1] || ""), scene: scenes[i] || "", style: styleOf("cStyle") }) });
           const d = await resp.json().catch(() => ({}));
           if (!resp.ok || !d.image) throw new Error(d.error || "fail");
           srcs[i] = await shrink(d.image, 1200); ok++;
@@ -1982,11 +2025,11 @@ $("#nGo").onclick = async () => {
     sajuMark();
     let photos = nImgs.map(t => t.url), drawFail = 0;
     if ($("#nDraw").checked && photos.length){
-      $("#nResult").innerHTML = `<p class="thinking" style="color:#2E7D46">크레파스로 그리는 중… (사진 한 장에 30초쯤)</p>`;
+      $("#nResult").innerHTML = `<p class="thinking" style="color:#2E7D46">그림으로 바꾸는 중… (사진 한 장에 30초쯤)</p>`;
       photos = await Promise.all(photos.map(async (u, i) => {
         try {
           const resp = await fetch("/api/drawing", { method:"POST", headers:{"Content-Type":"application/json"},
-            body: JSON.stringify({ image: String(u).split(",")[1], name, kind: $("#nKind").value, title: r.title, diary: r.diary }) });
+            body: JSON.stringify({ image: String(u).split(",")[1], name, kind: $("#nKind").value, title: r.title, diary: r.diary, style: styleOf("nStyle") }) });
           const dd = await resp.json().catch(() => ({}));
           if (!resp.ok || !dd.image) throw new Error();
           return await shrink(dd.image, 1200);
@@ -2153,6 +2196,101 @@ function musicBox(ctx, dest, seconds){
   master.gain.setValueAtTime(0.16, start + seconds - 1.6); master.gain.linearRampToValueAtTime(0.0001, start + seconds - 0.2);
 }
 
+
+function loadMuxer(){
+  if (window.Mp4Muxer) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "/lib/mp4-muxer.js"; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+}
+async function pickConfig(list){
+  for (const cfg of list){ try { const r = await (cfg.numberOfChannels ? AudioEncoder : VideoEncoder).isConfigSupported(cfg); if (r && r.supported) return cfg; } catch {} }
+  return null;
+}
+async function encodeMp4(cv, frame, DURATION, FPS, withMusic, onProgress){
+  await loadMuxer();
+  const W = cv.width, H = cv.height;
+  const vcfg = await pickConfig(["avc1.640028", "avc1.4d0028", "avc1.42003e", "avc1.420034"].map(codec => ({ codec, width: W, height: H, bitrate: 6_000_000, framerate: FPS })));
+  if (!vcfg) throw new Error("no avc");
+  const SR = 48000;
+  let acfg = null;
+  if (withMusic && window.AudioEncoder && window.OfflineAudioContext){
+    acfg = await pickConfig([{ codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 1, bitrate: 128000 }, { codec: "opus", sampleRate: SR, numberOfChannels: 1, bitrate: 128000 }]);
+  }
+  const muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: { codec: "avc", width: W, height: H, frameRate: FPS },
+    audio: acfg ? { codec: acfg.codec === "opus" ? "opus" : "aac", sampleRate: SR, numberOfChannels: 1 } : undefined,
+    fastStart: "in-memory",
+  });
+  let err = null;
+  const venc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: e => { err = e; } });
+  venc.configure(vcfg);
+  const total = Math.ceil(DURATION * FPS);
+  for (let i = 0; i < total; i++){
+    if (err) throw err;
+    frame(Math.min(i / FPS, DURATION));
+    const vf = new VideoFrame(cv, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+    venc.encode(vf, { keyFrame: i % (FPS * 2) === 0 });
+    vf.close();
+    while (venc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 5));
+    if (i % 10 === 0){ onProgress(Math.round(i / total * (acfg ? 90 : 100))); await new Promise(r => setTimeout(r, 0)); }
+  }
+  await venc.flush(); venc.close();
+  if (err) throw err;
+  if (acfg){
+    // 오르골 음악을 미리 소리 파일로 만들어 넣기
+    const octx = new OfflineAudioContext(1, Math.ceil(SR * DURATION), SR);
+    musicBox(octx, octx.destination, DURATION);
+    const buf = await octx.startRendering();
+    const data = buf.getChannelData(0);
+    const aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: e => { err = e; } });
+    aenc.configure(acfg);
+    const STEP = 1024;
+    for (let off = 0; off < data.length; off += STEP){
+      const n = Math.min(STEP, data.length - off);
+      const ad = new AudioData({ format: "f32-planar", sampleRate: SR, numberOfFrames: n, numberOfChannels: 1, timestamp: Math.round(off / SR * 1e6), data: data.slice(off, off + n) });
+      aenc.encode(ad); ad.close();
+    }
+    await aenc.flush(); aenc.close();
+    if (err) throw err;
+  }
+  muxer.finalize();
+  onProgress(100);
+  return new Blob([muxer.target.buffer], { type: "video/mp4" });
+}
+async function recordRealtime(cv, frame, DURATION, FPS, withMusic, onProgress){
+  const type = pickVideoType();
+  const stream = cv.captureStream(FPS);
+  let actx = null;
+  if (withMusic){
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      await actx.resume(); // 소리가 멈춘 상태면 영상이 중간에 끊길 수 있어서 꼭 깨워요
+      if (actx.state === "running"){
+        const dest = actx.createMediaStreamDestination();
+        musicBox(actx, dest, DURATION);
+        dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+      }
+    } catch (e) { console.warn(e); }
+  }
+  const rec = new MediaRecorder(stream, type ? { mimeType: type, videoBitsPerSecond: 6_000_000 } : { videoBitsPerSecond: 6_000_000 });
+  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const done = new Promise(res => rec.onstop = res);
+  frame(0); rec.start();
+  const t0 = performance.now();
+  await new Promise(res => {
+    const iv = setInterval(() => {
+      const t = (performance.now() - t0) / 1000;
+      frame(Math.min(t, DURATION));
+      onProgress(Math.min(100, Math.round(t / DURATION * 100)));
+      if (t >= DURATION + 0.3){ clearInterval(iv); res(); }
+    }, 1000 / FPS);
+  });
+  rec.stop(); await done;
+  if (actx) try { actx.close(); } catch {}
+  const mime = (rec.mimeType || type || "video/webm").split(";")[0];
+  return { blob: new Blob(chunks, { type: mime }), mime };
+}
+
 async function makeShorts(entry){
   const out = $("#vidOut"), btn = $("#vid");
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ out.innerHTML = `<p class="note">이 브라우저는 영상 만들기를 지원하지 않아요. 크롬에서 열어 주세요.</p>`; return; }
@@ -2233,44 +2371,28 @@ async function makeShorts(entry){
     if (a3 > 0){ g.globalAlpha = a3; g.textAlign = "center"; g.fillStyle = INK; g.font = `700 46px ${HAND}`; g.fillText(`${entry.name}의 그림일기`, W/2, H - 96); g.font = `400 34px ${HAND}`; g.fillStyle = "#E0483E"; g.fillText("발도장 그림일기", W/2, H - 46); g.globalAlpha = 1; }
   }
 
-  // 녹화
-  const type = pickVideoType();
-  const stream = cv.captureStream(FPS);
-  let actx = null;
-  if ($("#vidMusic") && $("#vidMusic").checked){
+  const withMusic = !!($("#vidMusic") && $("#vidMusic").checked);
+  let blob = null, mime = "video/mp4";
+  // 1순위: 한 장면씩 직접 인코딩해서 mp4 만들기 (길이가 정확하고 화질이 좋아요)
+  if (window.VideoEncoder && window.VideoFrame){
     try {
-      actx = new (window.AudioContext || window.webkitAudioContext)();
-      const dest = actx.createMediaStreamDestination();
-      musicBox(actx, dest, DURATION);
-      dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
-    } catch (e) { console.warn(e); }
+      blob = await encodeMp4(cv, frame, DURATION, FPS, withMusic, p => { btn.textContent = `영상 만드는 중 ${p}%`; });
+      mime = "video/mp4";
+    } catch (e) { console.warn("mp4 인코딩 실패, 녹화 방식으로 전환", e); blob = null; }
   }
-  const rec = new MediaRecorder(stream, type ? { mimeType: type, videoBitsPerSecond: 6_000_000 } : { videoBitsPerSecond: 6_000_000 });
-  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-  const done = new Promise(res => rec.onstop = res);
-  frame(0); rec.start(250);
-  const t0 = performance.now();
-  out.innerHTML = `<p class="thinking">영상 녹화 중… 약 ${Math.ceil(DURATION)}초 걸려요. 화면을 끄거나 다른 앱으로 가지 말아 주세요.</p>`;
-  await new Promise(res => {
-    const tick = () => {
-      const t = (performance.now() - t0) / 1000;
-      frame(Math.min(t, DURATION));
-      btn.textContent = `녹화 중 ${Math.min(100, Math.round(t / DURATION * 100))}%`;
-      if (t < DURATION) requestAnimationFrame(tick); else res();
-    };
-    requestAnimationFrame(tick);
-  });
-  rec.stop(); await done;
-  if (actx) try { actx.close(); } catch {}
-  const mime = (rec.mimeType || type || "video/webm").split(";")[0];
+  // 2순위: 화면 녹화 방식
+  if (!blob){
+    out.innerHTML = `<p class="thinking">영상 녹화 중… 약 ${Math.ceil(DURATION)}초 걸려요. 화면을 끄거나 다른 앱으로 가지 말아 주세요.</p>`;
+    const r2 = await recordRealtime(cv, frame, DURATION, FPS, withMusic, p => { btn.textContent = `녹화 중 ${p}%`; });
+    blob = r2.blob; mime = r2.mime;
+  }
   const ext = mime.includes("mp4") ? "mp4" : "webm";
-  const blob = new Blob(chunks, { type: mime });
   const url = URL.createObjectURL(blob);
-  const fname = `petdiary-shorts-${new Date().toISOString().slice(0,10)}.${ext}`;
+  const fname = `baldojang-shorts-${new Date().toISOString().slice(0,10)}.${ext}`;
   out.innerHTML = `<div class="vidwrap"><video src="${url}" controls playsinline></video></div>
     <div class="actions"><button id="vidSave" class="main">영상 저장하기</button><button id="vidShare">공유하기</button></div>
     ${ext === "webm" ? `<p class="disclaimer" style="color:var(--muted)">이 휴대폰에서는 webm 형식으로 만들어졌어요. 유튜브는 그대로 올라가고, 인스타에 올릴 땐 캡컷에서 한 번 불러와 저장하면 돼요.</p>` : ""}`;
-  $("#vidSave").onclick = () => { const a = document.createElement("a"); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); };
+  $("#vidSave").onclick = () => { const el = document.createElement("a"); el.href = url; el.download = fname; document.body.appendChild(el); el.click(); el.remove(); };
   $("#vidShare").onclick = async () => {
     try { const f = new File([blob], fname, { type: mime }); if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] }); else $("#vidShare").textContent = "공유가 안 돼요. 저장해 주세요"; }
     catch (e) { if (!e || e.name !== "AbortError") $("#vidShare").textContent = "공유가 안 돼요. 저장해 주세요"; }
