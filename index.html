@@ -111,7 +111,15 @@ button.primary:disabled{opacity:.5;cursor:wait}
 @media (prefers-reduced-motion: reduce){.stamp.on{animation:none;transform:rotate(-14deg);opacity:.9}}
 .thinking{font-family:"Gaegu",cursive;font-size:1.4rem;color:var(--ink);padding:18px 4px}
 
-.actions{display:flex;gap:8px;margin-top:30px}
+.page{background:#fff;padding:14px 14px 10px}
+.sign{text-align:right;margin-top:26px;font-family:"Gaegu",cursive;font-size:1rem;color:#6B7A99}
+.page.capturing .stamp{animation:none;transform:rotate(-14deg);opacity:.9}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.actions button{flex:1 1 40%}
+.actions .main,.actions .artbtn{flex:1 1 100%;text-align:center;font-weight:700;padding:12px;border-radius:6px;cursor:pointer}
+.actions .main{background:var(--ink);color:#fff;border:0}
+.actions .artbtn{background:var(--marker);color:#23407F;font-size:1rem}
+#artFile:focus-visible + .artbtn{outline:3px solid var(--ink);outline-offset:2px}
 .actions button{
   flex:1;font:inherit;font-size:.95rem;padding:10px;border-radius:6px;cursor:pointer;
   border:1.5px solid var(--ink);background:transparent;color:var(--ink);
@@ -250,28 +258,107 @@ function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 function render(entry, animate){
   const el = $("#diary");
   el.innerHTML = `
-    <div class="meta"><div>${escapeHtml(entry.date)}</div><div>날씨: ${escapeHtml(WEATHER[entry.weather] || entry.weather || "☀️ 맑음")}</div></div>
-    ${entry.img ? `<div class="picture ${entry.pending ? "pending" : ""}" id="pic"><img src="${entry.img}" alt="${escapeHtml(entry.name)} 그림">${entry.pending ? `<div class="drawing">${escapeHtml(entry.name)} 모습을 크레파스로 그리는 중…<br>(30초쯤 걸려요)</div>` : ""}${entry.drawErr ? `<div class="drawing" style="position:static;font-size:1rem;color:var(--stamp)">${escapeHtml(entry.drawErr)}</div>` : ""}</div>` : ""}
-    <div class="title">제목: ${escapeHtml(entry.title)}</div>
-    <div class="stampwrap">
-      <div class="wongoji">${wongoji(entry.diary)}</div>
-      <div class="stamp ${animate ? "on" : "on"}" aria-hidden="true">참<br>잘했어요</div>
+    <div class="page" id="page">
+      <div class="meta"><div>${escapeHtml(entry.date)}</div><div>날씨: ${escapeHtml(WEATHER[entry.weather] || entry.weather || "☀️ 맑음")}</div></div>
+      ${entry.img ? `<div class="picture ${entry.pending ? "pending" : ""}" id="pic"><img src="${entry.img}" alt="${escapeHtml(entry.name)} 그림">${entry.pending ? `<div class="drawing" data-skip>${escapeHtml(entry.name)} 모습을 크레파스로 그리는 중…<br>(30초쯤 걸려요)</div>` : ""}</div>` : ""}
+      <div class="title">제목: ${escapeHtml(entry.title)}</div>
+      <div class="stampwrap">
+        <div class="wongoji">${wongoji(entry.diary)}</div>
+        <div class="stamp on" aria-hidden="true">참<br>잘했어요</div>
+      </div>
+      <div class="sign">${escapeHtml(entry.name)}의 그림일기 · ${escapeHtml(location.host)}</div>
     </div>
+    ${entry.drawErr ? `<p class="note">${escapeHtml(entry.drawErr)} 아래 '그림 넣기'로 직접 그림을 넣을 수도 있어요.</p>` : ""}
     <div class="actions">
+      <button id="shot" class="main">일기장 이미지로 저장하기</button>
+      <input type="file" id="artFile" accept="image/*" class="sr">
+      <label for="artFile" class="artbtn">그림 넣기</label>
+      ${entry.scene ? `<button id="copyArt">그림 문장 복사</button>` : ""}
       <button id="copy">글 복사하기</button>
-      ${entry.drawn ? `<button id="save">그림 저장하기</button>` : ""}
       <button id="again">다시 써 달라고 하기</button>
     </div>`;
   el.classList.add("show");
+
   $("#copy").onclick = async () => {
     const t = `${entry.date} ${entry.name}의 일기\n제목: ${entry.title}\n\n${entry.diary}`;
     try { await navigator.clipboard.writeText(t); $("#copy").textContent = "복사했어요"; }
     catch { $("#copy").textContent = "복사가 막혀 있어요"; }
   };
+  const ca = $("#copyArt");
+  if (ca) ca.onclick = async () => {
+    try { await navigator.clipboard.writeText(artPrompt(entry)); ca.textContent = "복사했어요"; }
+    catch { ca.textContent = "복사가 막혀 있어요"; }
+  };
+  $("#artFile").onchange = async ev => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    const t = await makeThumb(f);
+    if (!t) return;
+    entry.img = t.url; entry.pending = false; delete entry.drawErr;
+    const list = loadAll();
+    const i = list.findIndex(x => x.id && x.id === entry.id);
+    if (i >= 0) { list[i].img = await shrink(t.url, 640); saveAll(list); }
+    render(entry, false); renderHistory();
+  };
   $("#again").onclick = () => write();
-  const sv = $("#save");
-  if (sv) sv.onclick = () => { const a = document.createElement("a"); a.href = entry.img; a.download = `${entry.name}-그림일기.png`; document.body.appendChild(a); a.click(); a.remove(); };
+  $("#shot").onclick = () => savePage(entry);
   el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+}
+
+function loadH2C(){
+  if (window.html2canvas) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+    sc.onload = res; sc.onerror = rej;
+    document.head.appendChild(sc);
+  });
+}
+
+async function savePage(entry){
+  const btn = $("#shot");
+  if (entry.pending){ btn.textContent = "그림이 다 그려지면 저장할 수 있어요"; return; }
+  btn.disabled = true; btn.textContent = "이미지 만드는 중…";
+  try {
+    await loadH2C();
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const page = $("#page");
+    page.classList.add("capturing");
+    const canvas = await html2canvas(page, {
+      scale: 2, backgroundColor: "#ffffff", useCORS: true,
+      ignoreElements: n => n.hasAttribute && n.hasAttribute("data-skip")
+    });
+    page.classList.remove("capturing");
+    const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+    const fname = `${entry.name}-그림일기-${new Date().toISOString().slice(0,10)}.png`;
+    const file = new File([blob], fname, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: `${entry.name}의 그림일기` }); btn.textContent = "공유했어요"; }
+      catch (e) { if (e && e.name !== "AbortError") throw e; btn.textContent = "일기장 이미지로 저장하기"; }
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      btn.textContent = "저장했어요";
+    }
+  } catch (e) {
+    console.error(e);
+    $("#page") && $("#page").classList.remove("capturing");
+    btn.textContent = "저장이 안 됐어요. 화면을 캡처해 주세요";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function artPrompt(e){
+  const animal = {"고양이":"cat","강아지":"dog","토끼":"rabbit","햄스터":"hamster","새":"bird"}[e.kind] || "pet";
+  return `Redraw the ${animal} in the attached photo as a cute crayon drawing, like a picture a Korean elementary school kid draws in a picture diary.
+Keep the ${animal} recognizable: same fur colors, markings and body shape as in the photo.
+Draw ONLY this scene, and nothing else: ${e.scene}
+Do not add any people, animals, objects or props that are not in that scene. Ignore the photo's background.
+No text, letters, numbers, labels or speech bubbles anywhere in the image.
+Style: wax crayon and colored pencil on white paper, simple slightly wobbly lines, soft pastel colors, plain white background. Square image.`;
 }
 
 function renderHistory(){
@@ -314,6 +401,7 @@ async function write(){
     if (!resp.ok || typeof r.diary !== "string") throw new Error(r.error || "fail");
     markUse();
     const entry = {
+      id: Date.now(), kind,
       date: todayStr(), name, weather: String(r.weather || "맑음"),
       title: String(r.title || `${name}의 하루`).slice(0,20),
       diary: r.diary.slice(0,260), img: thumb, scene: String(r.scene || "")
