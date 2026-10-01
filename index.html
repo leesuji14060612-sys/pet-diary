@@ -112,6 +112,13 @@ button.primary:disabled{opacity:.5;cursor:wait}
 .thinking{font-family:"Gaegu",cursive;font-size:1.4rem;color:var(--ink);padding:18px 4px}
 
 .page{background:#fff;padding:14px 14px 10px}
+.shotbox{position:fixed;inset:0;z-index:50;background:rgba(15,20,35,.75);display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
+.shotinner{background:#fff;border-radius:10px;padding:14px;max-width:480px;width:100%;max-height:100%;overflow:auto;text-align:center}
+.shotinner img{max-width:100%;display:block;margin:0 auto;border:1px solid #DCE6F2;-webkit-touch-callout:default;user-select:auto}
+.shottip{margin:0 0 10px;color:#23407F;font-size:1rem}
+.shotbtns{display:flex;gap:8px;margin-top:12px}
+.shotbtns button{flex:1;font:inherit;font-size:.9rem;padding:10px;border-radius:6px;border:1.5px solid #23407F;background:#fff;color:#23407F;cursor:pointer}
 .sign{text-align:right;margin-top:26px;font-family:"Gaegu",cursive;font-size:1rem;color:#6B7A99}
 .page.capturing .stamp{animation:none;transform:rotate(-14deg);opacity:.9}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
@@ -329,19 +336,9 @@ async function savePage(entry){
       ignoreElements: n => n.hasAttribute && n.hasAttribute("data-skip")
     });
     page.classList.remove("capturing");
-    const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
-    const fname = `${entry.name}-그림일기-${new Date().toISOString().slice(0,10)}.png`;
-    const file = new File([blob], fname, { type: "image/png" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: `${entry.name}의 그림일기` }); btn.textContent = "공유했어요"; }
-      catch (e) { if (e && e.name !== "AbortError") throw e; btn.textContent = "일기장 이미지로 저장하기"; }
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = fname;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-      btn.textContent = "저장했어요";
-    }
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    showShot(dataUrl, entry);
+    btn.textContent = "일기장 이미지로 저장하기";
   } catch (e) {
     console.error(e);
     $("#page") && $("#page").classList.remove("capturing");
@@ -349,6 +346,45 @@ async function savePage(entry){
   } finally {
     btn.disabled = false;
   }
+}
+
+function showShot(dataUrl, entry){
+  const fname = `petdiary-${new Date().toISOString().slice(0,10)}.jpg`;
+  const box = document.createElement("div");
+  box.className = "shotbox";
+  box.innerHTML = `
+    <div class="shotinner" role="dialog" aria-label="일기장 이미지">
+      <p class="shottip">아래 이미지를 <b>꾹 눌러서</b><br>'이미지 저장'을 골라 주세요</p>
+      <img src="${dataUrl}" alt="${escapeHtml(entry.name)}의 그림일기">
+      <div class="shotbtns">
+        <button id="shotShare">공유하기</button>
+        <button id="shotDl">파일로 받기</button>
+        <button id="shotClose">닫기</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+  document.body.style.overflow = "hidden";
+  const close = () => { box.remove(); document.body.style.overflow = ""; };
+  box.querySelector("#shotClose").onclick = close;
+  box.addEventListener("click", e => { if (e.target === box) close(); });
+  box.querySelector("#shotDl").onclick = () => {
+    const a = document.createElement("a"); a.href = dataUrl; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  const sh = box.querySelector("#shotShare");
+  sh.onclick = async () => {
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], fname, { type: "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+      } else {
+        sh.textContent = "이 브라우저는 공유가 안 돼요";
+      }
+    } catch (e) {
+      if (!e || e.name !== "AbortError") sh.textContent = "공유가 안 돼요. 꾹 눌러 저장해 주세요";
+    }
+  };
 }
 
 function artPrompt(e){
