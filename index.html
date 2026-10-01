@@ -156,13 +156,16 @@ button.primary:disabled{opacity:.5;cursor:wait}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tabs button{color:#C9D6F2;border-color:#C9D6F2}:root:not([data-theme="light"]) .tabs button[aria-selected="true"]{background:#C9D6F2;color:#1B2233}}
 :root[data-theme="dark"] .tabs button{color:#C9D6F2;border-color:#C9D6F2}
 :root[data-theme="dark"] .tabs button[aria-selected="true"]{background:#C9D6F2;color:#1B2233}
-.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px}
+.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:6px}
 .mode{font:inherit;font-size:.9rem;padding:10px 4px;border-radius:6px;border:1.5px solid #C8321E;background:#fff;color:#C8321E;cursor:pointer}
 .mode.on{background:#C8321E;color:#fff}
 .check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:#4A4A4A;margin-top:8px}
 .check input{width:18px;height:18px}
 input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(--grid);border-radius:4px;padding:9px 12px;background:#fff;color:#2A2A2A}
 .sajusheet .primary{background:#C8321E}
+.facedrop{min-height:150px;margin-top:12px;border-color:#C8321E;background:#FFF8E0;color:#C8321E}
+.facedrop img{max-height:220px}
+.facephoto{display:block;width:160px;height:160px;object-fit:cover;border-radius:50%;border:4px solid #C8321E;margin:10px auto 6px}
 
 .bujeok{margin-top:24px;background:#FBEFC4;border:3px double #C8321E;border-radius:4px;padding:18px 16px 14px;color:#3A2A1A}
 .bujeok .bhead{text-align:center;font-family:"Gowun Batang","Nanum Myeongjo",serif;color:#C8321E}
@@ -243,6 +246,7 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
       <button class="mode on" data-mode="pet" role="radio" aria-checked="true">우리 애 사주</button>
       <button class="mode" data-mode="match" role="radio" aria-checked="false">집사와 궁합</button>
       <button class="mode" data-mode="year" role="radio" aria-checked="false">올해 운세</button>
+      <button class="mode" data-mode="face" role="radio" aria-checked="false">📸 관상 보기</button>
     </div>
 
     <div class="row">
@@ -258,6 +262,10 @@ input[type=date]{width:100%;font:inherit;font-size:1rem;border:1.5px solid var(-
       </div>
     </div>
 
+    <div id="faceBox" hidden>
+      <input type="file" id="fPhoto" accept="image/*" class="sr">
+      <label for="fPhoto" class="drop facedrop" id="fDrop"><span class="hint" id="fHint">여기를 눌러 얼굴이 잘 보이는 사진 고르기</span></label>
+    </div>
     <label for="sDate" id="sDateLabel">생일</label>
     <input type="date" id="sDate" min="1990-01-01">
     <label class="check"><input type="checkbox" id="sNoBday"> 생일을 몰라요 (집에 온 날로 볼게요)</label>
@@ -799,9 +807,26 @@ document.querySelectorAll(".mode").forEach(b => b.onclick = () => {
   document.querySelectorAll(".mode").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
   $("#ownerBox").hidden = sMode !== "match";
   $("#yearBox").hidden = sMode !== "year";
+  $("#faceBox").hidden = sMode !== "face";
+  updateDateLabel();
   $("#sNote").textContent = "";
 });
-$("#sNoBday").onchange = e => { $("#sDateLabel").textContent = e.target.checked ? "집에 온 날" : "생일"; };
+function updateDateLabel(){
+  const base = $("#sNoBday").checked ? "집에 온 날" : "생일";
+  $("#sDateLabel").textContent = sMode === "face" ? `${base} (선택 · 넣으면 사주까지 종합 풀이)` : base;
+}
+$("#sNoBday").onchange = updateDateLabel;
+let faceFile = null, faceThumb = null;
+$("#fPhoto").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const t = await makeThumb(f);
+  if (!t || !t.blob){ $("#sNote").textContent = "이 사진은 읽을 수 없어요. 다른 사진을 골라 주세요."; return; }
+  faceFile = t.blob; faceThumb = t.url;
+  const d = $("#fDrop"); d.querySelector("img")?.remove(); $("#fHint").hidden = true;
+  const im = new Image(); im.src = faceThumb; im.alt = "고른 사진"; d.appendChild(im);
+  $("#sNote").textContent = "";
+});
 
 function pillarBoxes(sj, withHour){
   const cells = sj.pillars.map(p => `<div><small>${p.label}</small><b>${SJ.STEMS_H[p.s]}<br>${SJ.BR_H[p.b]}</b><em>${SJ.STEMS[p.s]}${SJ.BR[p.b]}</em></div>`);
@@ -819,10 +844,12 @@ async function askDosa(){
   const kind = $("#sKind").value;
   const date = $("#sDate").value;
   const basis = $("#sNoBday").checked ? "집에 온 날" : "생일";
-  if (!date){ $("#sNote").textContent = `${basis}을 넣어 주세요.`; return; }
+  if (sMode === "face" && !faceFile){ $("#sNote").textContent = "얼굴이 잘 보이는 사진을 골라 주세요."; return; }
+  if (!date && sMode !== "face"){ $("#sNote").textContent = `${basis}을 넣어 주세요.`; return; }
   if (sajuUsed() >= SAJU_LIMIT){ $("#sNote").textContent = `오늘은 ${SAJU_LIMIT}번까지 볼 수 있어요. 내일 또 와 주세요!`; return; }
-  const pet = sajuOf(date);
-  const body = { mode: sMode, pet: { name, kind, basis, date, pillars: pet.text, dayMaster: pet.dayMaster, animal: pet.animal, elements: pet.elText } };
+  const pet = date ? sajuOf(date) : null;
+  const body = { mode: sMode, pet: pet ? { name, kind, basis, date, pillars: pet.text, dayMaster: pet.dayMaster, animal: pet.animal, elements: pet.elText } : { name, kind } };
+  if (sMode === "face") body.image = await blobToBase64(faceFile);
   let own = null, score = null, yearSel = null, yinfo = null;
   if (sMode === "match"){
     const od = $("#oDate").value;
@@ -847,7 +874,7 @@ async function askDosa(){
     const r = await resp.json().catch(() => ({}));
     if (!resp.ok || r.error) throw new Error(r.error || "도사님이 잠깐 자리를 비웠어요. 다시 눌러 주세요.");
     sajuMark();
-    const card = { mode: sMode, name, kind, basis, date, pet, own, ownerName: body.owner && body.owner.name, score, year: yearSel, yinfo, r };
+    const card = { mode: sMode, name, kind, basis, date, pet, photo: sMode === "face" ? faceThumb : null, own, ownerName: body.owner && body.owner.name, score, year: yearSel, yinfo, r };
     renderSaju(card);
   } catch (e) {
     out.innerHTML = "";
@@ -861,18 +888,22 @@ $("#sGo").onclick = askDosa;
 function sajuSections(c){
   const r = c.r;
   if (c.mode === "pet") return [["타고난 성격", r.personality], ["잘 맞는 간식", r.snacks], ["좋아할 놀이", r.toys], ["살짝 조심", r.caution], ["행운의 아이템", r.lucky]];
+  if (c.mode === "face") return [["눈", r.eyes], ["코와 입", r.nose], ["귀", r.ears], ["털 색과 무늬", r.fur], ["전생 직업", r.pastLife], ["타고난 복", r.fortune], ["관상 + 사주 종합", r.combo]];
   if (c.mode === "match") return [["전생에 둘은", r.pastLife], ["찰떡인 점", r.good], ["티격태격 포인트", r.careful], ["더 친해지는 팁", r.tip]];
   return [["봄", r.spring], ["여름", r.summer], ["가을", r.autumn], ["겨울", r.winter], ["행운의 아이템", r.lucky], ["살짝 조심", r.caution]];
 }
 function sajuHead(c){
   if (c.mode === "pet") return { small: "냥멍도사의 사주풀이", big: `${c.name}${c.r.nickname ? ` · ${c.r.nickname}` : ""}` };
+  if (c.mode === "face") return { small: "냥멍도사의 관상풀이", big: `${c.name}${c.r.nickname ? ` · ${c.r.nickname}` : ""}` };
   if (c.mode === "match") return { small: "냥멍도사의 궁합풀이", big: `${c.ownerName} ♥ ${c.name}` };
   return { small: `냥멍도사의 ${c.year}년 운세`, big: `${c.name}${c.r.keyword ? ` · ${c.r.keyword}` : ""}` };
 }
 
 function renderSaju(c){
   const h = sajuHead(c);
-  const pills = c.mode === "match"
+  const pills = c.mode === "face"
+    ? `<img class="facephoto" src="${c.photo}" alt="${escapeHtml(c.name)} 사진">${c.pet ? `<div class="pillars three">${pillarBoxes(c.pet)}</div>` : ""}`
+    : c.mode === "match"
     ? `<div class="duo"><div><div class="who">${escapeHtml(c.ownerName)}</div><div class="pillars">${pillarBoxes(c.own)}</div></div><div><div class="who">${escapeHtml(c.name)}</div><div class="pillars">${pillarBoxes(c.pet)}</div></div></div>`
     : `<div class="pillars three">${pillarBoxes(c.pet)}</div>${elBar(c.pet)}`;
   $("#sResult").innerHTML = `
@@ -883,7 +914,7 @@ function renderSaju(c){
       ${pills}
       <p style="text-align:center;margin:6px 0 10px;font-weight:700">${escapeHtml(c.r.summary || "")}</p>
       ${sajuSections(c).filter(x => x[1]).map(([t,p]) => `<div class="bsec"><h3>${escapeHtml(t)}</h3><p>${escapeHtml(p)}</p></div>`).join("")}
-      <p class="disclaimer">${escapeHtml(c.basis)} ${escapeHtml(c.date)} 기준 · 재미로 보는 운세예요</p>
+      <p class="disclaimer">${c.date ? `${escapeHtml(c.basis)} ${escapeHtml(c.date)} 기준 · ` : ""}재미로 보는 운세예요</p>
     </div>
     <div class="actions">
       <button id="sShot" class="main">사주 카드 이미지로 저장하기</button>
@@ -927,8 +958,8 @@ async function drawSajuCanvas(c){
   const secLines = secs.map(([t,p]) => wrapLines(m, p, IW));
   m.font = `700 40px ${SANS}`;
   const sumLines = wrapLines(m, c.r.summary || "", IW);
-  const PILL_H = c.mode === "match" ? 260 : 230;
-  let H = PAD + 70 + 80 + (c.mode === "match" ? 130 : 0) + (c.mode === "year" ? 50 : 0) + PILL_H + (c.mode === "match" ? 0 : 80)
+  const PILL_H = c.mode === "match" ? 260 : c.mode === "face" ? (300 + (c.pet ? 230 : 0)) : 230;
+  let H = PAD + 70 + 80 + (c.mode === "match" ? 130 : 0) + (c.mode === "year" ? 50 : 0) + PILL_H + (c.mode === "match" || c.mode === "face" ? 0 : 80)
         + sumLines.length * 54 + 30 + secLines.reduce((a, l) => a + 70 + l.length * 54 + 16, 0) + 150;
 
   const cv = document.createElement("canvas"); cv.width = W; cv.height = Math.round(H);
@@ -963,7 +994,18 @@ async function drawSajuCanvas(c){
       g.fillStyle = BROWN; g.font = `24px ${SANS}`; g.fillText(it[3], bx + bw/2, yy + bh - 20);
     });
   };
-  if (c.mode === "match"){
+  if (c.mode === "face"){
+    const ph = await loadImg(c.photo);
+    if (ph){
+      const R = 130, cx = W/2, cy = y + 140, side = Math.min(ph.width, ph.height);
+      g.save(); g.beginPath(); g.arc(cx, cy, R, 0, Math.PI*2); g.clip();
+      g.drawImage(ph, (ph.width-side)/2, (ph.height-side)/2, side, side, cx-R, cy-R, R*2, R*2);
+      g.restore();
+      g.strokeStyle = RED; g.lineWidth = 8; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI*2); g.stroke();
+    }
+    y += 300;
+    if (c.pet){ drawPills(c.pet, PAD, IW, false); y += 230; }
+  } else if (c.mode === "match"){
     const half = (IW - 30) / 2;
     drawPills(c.own, PAD, half, false, c.ownerName);
     drawPills(c.pet, PAD + half + 30, half, false, c.name);
@@ -995,7 +1037,7 @@ async function drawSajuCanvas(c){
   });
 
   g.textAlign = "center"; g.fillStyle = BROWN; g.font = `28px ${SANS}`;
-  g.fillText(`${c.basis} ${c.date} 기준 · 재미로 보는 운세예요`, W/2, y + 30);
+  g.fillText(`${c.date ? `${c.basis} ${c.date} 기준 · ` : ""}재미로 보는 운세예요`, W/2, y + 30);
   g.fillText(location.host, W/2, y + 72);
   return cv;
 }

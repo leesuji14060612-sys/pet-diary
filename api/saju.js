@@ -56,6 +56,18 @@ ${petLine(b.pet)}
 JSON 형식:
 {"keyword":"그해 키워드 6자 이내","summary":"한 줄 요약","spring":"봄 운세 1문장","summer":"여름 운세 1문장","autumn":"가을 운세 1문장","winter":"겨울 운세 1문장","lucky":"행운의 아이템 한 줄","caution":"가볍게 조심할 것 1문장"}`;
   }
+  if (mode === "face") {
+    return `${COMMON}
+- 첨부한 사진 속 반려동물의 얼굴을 실제로 보고, 보이는 특징(눈 모양·색, 코, 귀, 입, 털 색과 무늬, 표정)을 근거로 관상을 풀어 줘. 사진에 안 보이는 부위는 지어내지 말고 "사진으론 잘 안 보이지만"처럼 넘어가.
+- 건강·질병 판단은 절대 하지 마. 성격과 복, 재미 위주로만.
+- 사진에 동물이 없으면 nickname을 "관상 불가"로 하고 summary에 다른 사진을 올려 달라고 써.
+
+[반려동물] 이름 ${clip(b.pet && b.pet.name, 12) || "우리 애"} (${KINDS.includes(b.pet && b.pet.kind) ? b.pet.kind : "반려동물"})
+${b.pet && b.pet.pillars ? `생일 사주도 있음 → combo에 관상과 사주를 엮은 종합 풀이를 써 줘.\n${petLine(b.pet)}` : "생일 정보 없음 → combo는 빈 문자열로."}
+
+JSON 형식:
+{"nickname":"10자 이내 관상 별명(예: 타고난 재물복 상)","summary":"한 줄 총평","eyes":"눈 풀이 1~2문장","nose":"코·입 풀이 1~2문장","ears":"귀 풀이 1~2문장","fur":"털 색·무늬 풀이 1~2문장","pastLife":"웃긴 전생 직업 한 구절(예: 조선시대 어사또)","fortune":"타고난 복 1~2문장","combo":"관상+사주 종합 2~3문장 또는 빈 문자열"}`;
+  }
   return null;
 }
 
@@ -64,8 +76,18 @@ module.exports = async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error: "서버에 API 키가 설정되지 않았어요." });
 
-  const prompt = buildPrompt(req.body || {});
+  const b = req.body || {};
+  const prompt = buildPrompt(b);
   if (!prompt) return res.status(400).json({ error: "잘못된 요청이에요." });
+  let content = prompt;
+  if (b.mode === "face") {
+    const image = typeof b.image === "string" ? b.image : "";
+    if (!image || image.length > 3_500_000) return res.status(400).json({ error: "사진이 없거나 너무 커요. 다른 사진을 골라 주세요." });
+    content = [
+      { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
+      { type: "text", text: prompt },
+    ];
+  }
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -74,7 +96,7 @@ module.exports = async (req, res) => {
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001",
         max_tokens: 900,
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content }],
       }),
     });
     const data = await r.json();
